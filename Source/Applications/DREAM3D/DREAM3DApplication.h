@@ -43,6 +43,8 @@
 
 #define dream3dApp (static_cast<DREAM3DApplication *>(qApp))
 
+class AboutPlugins;
+
 class DREAM3DApplication : public QApplication
 {
   Q_OBJECT
@@ -61,9 +63,12 @@ protected:
 
 protected slots:
   void exitTriggered();
+  void openAboutPlugins();
+  void restartDREAM3DInstances();
 
 private:
   QList<QWidget*>                   m_DREAM3DWidgetList;
+  AboutPlugins*                     m_AboutPlugins;
 
   DREAM3DApplication(const DREAM3DApplication&); // Copy Constructor Not Implemented
   void operator=(const DREAM3DApplication&); // Operator '=' Not Implemented

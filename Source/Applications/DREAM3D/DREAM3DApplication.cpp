@@ -38,6 +38,7 @@
 #include "DREAM3DApplication.h"
 
 #include "Applications/DREAM3D/DREAM3D_UI.h"
+#include "Applications/DREAM3D/AboutPlugins.h"
 
 #include <QtGui/QFileOpenEvent>
 #include <iostream>
@@ -46,7 +47,8 @@
 //
 // -----------------------------------------------------------------------------
 DREAM3DApplication::DREAM3DApplication(int & argc, char ** argv) :
-  QApplication(argc, argv)
+  QApplication(argc, argv),
+  m_AboutPlugins(NULL)
 {
 
 }
@@ -56,7 +58,8 @@ DREAM3DApplication::DREAM3DApplication(int & argc, char ** argv) :
 // -----------------------------------------------------------------------------
 DREAM3DApplication::~DREAM3DApplication()
 {
-
+  delete m_AboutPlugins;
+  m_AboutPlugins = NULL;
 }
 
 // -----------------------------------------------------------------------------
@@ -128,6 +131,63 @@ void DREAM3DApplication::exitTriggered()
   {
     dream3dApp->quit();
   }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void DREAM3DApplication::openAboutPlugins()
+{
+  if (NULL == m_AboutPlugins)
+  {
+    m_AboutPlugins = new AboutPlugins(NULL);
+    m_AboutPlugins->setModal(true);
+  }
+
+  m_AboutPlugins->show();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void DREAM3DApplication::restartDREAM3DInstances()
+{
+//  // Write cache on exit
+//  dialog.writePluginCache();
+
+//  /* If any of the load checkboxes were changed, display a dialog warning
+//   * the user that they must restart DREAM3D to see the changes.
+//   */
+//  if (dialog.getLoadPreferencesDidChange() == true)
+//  {
+//    QMessageBox msgBox;
+//    msgBox.setText("DREAM3D must be restarted to allow these changes to take effect.");
+//    msgBox.setInformativeText("Restart?");
+//    msgBox.setWindowTitle("Restart Needed");
+//    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+//    msgBox.setDefaultButton(QMessageBox::Yes);
+//    int choice = msgBox.exec();
+
+//    if (choice == QMessageBox::Yes)
+//    {
+//      emit restartSelected();
+
+////      m_ShouldRestart = true;
+////      this->close();
+//    }
+//  }
+
+
+
+
+
+
+//  if (m_ShouldRestart == true)
+//  {
+//    // Restart DREAM3D
+//    QProcess::startDetached(QApplication::applicationFilePath());
+//    dream3dApp->quit();
+//  }
 }
 
 

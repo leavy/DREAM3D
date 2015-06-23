@@ -199,7 +199,6 @@ class DREAM3D_UI : public QMainWindow, private Ui::DREAM3D_UI
     // Help Menu
     void on_actionCheck_For_Updates_triggered();
     void on_actionAbout_DREAM3D_triggered();
-    void on_actionPlugin_Information_triggered();
     void on_actionShowIndex_triggered();
 
     // Recent Files menu

@@ -59,6 +59,7 @@
 #include "DREAM3DLib/Common/Constants.h"
 #include "DREAM3DLib/Common/FilterManager.h"
 #include "DREAM3DLib/FilterParameters/QFilterParametersWriter.h"
+#include "DREAM3DLib/Plugin/PluginManager.h"
 
 #include "QtSupportLib/ApplicationAboutBoxDialog.h"
 #include "QtSupportLib/QRecentFileList.h"
@@ -79,7 +80,6 @@
 
 #include "Applications/DREAM3D/DREAM3DConstants.h"
 #include "Applications/DREAM3D/AboutDREAM3D.h"
-#include "Applications/DREAM3D/AboutPlugins.h"
 #include "Applications/DREAM3D/DREAM3Dv6Wizard.h"
 #include "Applications/DREAM3D/DREAM3DApplication.h"
 
@@ -507,13 +507,6 @@ void DREAM3D_UI::closeEvent(QCloseEvent* event)
   dream3dApp->unregisterDREAM3DWindow(this);
 
   event->accept();
-
-  if (m_ShouldRestart == true)
-  {
-    // Restart DREAM3D
-    QProcess::startDetached(QApplication::applicationFilePath());
-    dream3dApp->quit();
-  }
 }
 
 // -----------------------------------------------------------------------------
@@ -766,6 +759,9 @@ void DREAM3D_UI::setupGui()
 void DREAM3D_UI::disconnectSignalsSlots()
 {
   QRecentFileList* recentsList = QRecentFileList::instance();
+
+  disconnect(actionPlugin_Information, SIGNAL(triggered()), dream3dApp, SLOT(openAboutPlugins()));
+
   disconnect(filterLibraryDockWidget, SIGNAL(filterItemDoubleClicked(const QString&)),
     pipelineViewWidget, SLOT(addFilter(const QString&)));
 
@@ -805,6 +801,8 @@ void DREAM3D_UI::disconnectSignalsSlots()
 void DREAM3D_UI::connectSignalsSlots()
 {
   QRecentFileList* recentsList = QRecentFileList::instance();
+
+  connect(actionPlugin_Information, SIGNAL(triggered()), dream3dApp, SLOT(openAboutPlugins()));
 
   connect(filterLibraryDockWidget, SIGNAL(filterItemDoubleClicked(const QString&)),
           pipelineViewWidget, SLOT(addFilter(const QString&)) );
@@ -1276,39 +1274,6 @@ void DREAM3D_UI::on_pipelineViewWidget_pipelineIssuesCleared()
 void DREAM3D_UI::on_pipelineViewWidget_pipelineHasNoErrors()
 {
 
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void DREAM3D_UI::on_actionPlugin_Information_triggered()
-{
-  AboutPlugins dialog(this);
-  dialog.exec();
-
-  // Write cache on exit
-  dialog.writePluginCache();
-
-  /* If any of the load checkboxes were changed, display a dialog warning
-   * the user that they must restart DREAM3D to see the changes.
-   */
-  if (dialog.getLoadPreferencesDidChange() == true)
-  {
-    QMessageBox msgBox;
-    msgBox.setText("DREAM3D must be restarted to allow these changes to take effect.");
-    msgBox.setInformativeText("Restart?");
-    msgBox.setWindowTitle("Restart Needed");
-    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-    msgBox.setDefaultButton(QMessageBox::Yes);
-    int choice = msgBox.exec();
-
-    if (choice == QMessageBox::Yes)
-    {
-      // Set Restart Flag and Begin closing DREAM3D
-      m_ShouldRestart = true;
-      this->close();
-    }
-  }
 }
 
 // -----------------------------------------------------------------------------
