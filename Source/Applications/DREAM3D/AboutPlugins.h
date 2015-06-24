@@ -90,6 +90,12 @@ class AboutPlugins : public QDialog, private Ui::AboutPlugins
     void setLoadPreferencesFlag(int state);
     void togglePluginState(int state);
 
+  protected:
+    void closeEvent(QCloseEvent* event);
+
+  signals:
+    void restartSelected();
+
   private:
     bool m_loadPreferencesDidChange;
 

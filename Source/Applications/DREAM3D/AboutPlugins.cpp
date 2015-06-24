@@ -89,6 +89,34 @@ AboutPlugins::~AboutPlugins()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void AboutPlugins::closeEvent(QCloseEvent* event)
+{
+    // Write cache
+    writePluginCache();
+
+    /* If any of the load checkboxes were changed, display a dialog warning
+     * the user that they must restart DREAM3D to see the changes.
+     */
+    if (m_loadPreferencesDidChange == true)
+    {
+      QMessageBox msgBox;
+      msgBox.setText("DREAM3D must be restarted to allow these changes to take effect.");
+      msgBox.setInformativeText("Restart?");
+      msgBox.setWindowTitle("Restart Needed");
+      msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+      msgBox.setDefaultButton(QMessageBox::Yes);
+      int choice = msgBox.exec();
+
+      if (choice == QMessageBox::Yes)
+      {
+        emit restartSelected();
+      }
+    }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void AboutPlugins::setupGui()
 {
   // Resize the column widths so that all text is showing

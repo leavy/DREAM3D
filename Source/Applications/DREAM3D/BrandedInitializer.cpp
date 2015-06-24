@@ -151,9 +151,46 @@ bool BrandedInitializer::initialize(int argc, char* argv[])
 
   // Create main window.
   this->MainWindow = new DREAM3D_UI(NULL);
-  this->MainWindow->setWindowTitle("[*]Untitled Pipeline - DREAM3D");
   this->MainWindow->setLoadedPlugins(plugins);
   this->MainWindow->setAttribute(Qt::WA_DeleteOnClose);
+  dream3dApp->registerDREAM3DWindow(this->MainWindow);
+
+  DREAM3DSettings prefs;
+  if (prefs.value("DREAM3D Mode", "") == "Restart")
+  {
+    prefs.beginGroup("Last Session");
+    if (prefs.childGroups().size() > 0)
+    {
+      prefs.beginGroup("Window 1");
+      this->MainWindow->readSettings(prefs);
+      QString filePath = prefs.value("Pipeline File", "").toString();
+      this->MainWindow->openNewPipeline(filePath, true, false, false);
+      prefs.endGroup();
+
+      for (int i=1; i<prefs.childGroups().size(); i++)
+      {
+        prefs.beginGroup("Window " + QString::number(i+1));
+        DREAM3D_UI* newInstance = new DREAM3D_UI(NULL);
+        newInstance->setLoadedPlugins(plugins);
+        newInstance->setAttribute(Qt::WA_DeleteOnClose);
+        dream3dApp->registerDREAM3DWindow(newInstance);
+        newInstance->readSettings(prefs);
+        QString filePath = prefs.value("Pipeline File", "").toString();
+        newInstance->openNewPipeline(filePath, true, false, false);
+        newInstance->show();
+        prefs.endGroup();
+      }
+    }
+    prefs.endGroup();
+    prefs.setValue("DREAM3D Mode", "Standard");
+
+    // Remove the last session, since we just read it in
+    prefs.remove("Last Session");
+  }
+  else
+  {
+    this->MainWindow->setWindowTitle("[*]Untitled Pipeline - DREAM3D");
+  }
 
   // Open pipeline if DREAM3D was opened from a compatible file
   if (argc == 2)
@@ -179,9 +216,7 @@ bool BrandedInitializer::initialize(int argc, char* argv[])
 
   // Check if this is the first run of DREAM3D
   this->MainWindow->checkFirstRun();
-
-  // Register the DREAM3D window with the application
-  dream3dApp->registerDREAM3DWindow(this->MainWindow);
+  this->MainWindow->show();
 
   return true;
 }

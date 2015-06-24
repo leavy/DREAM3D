@@ -170,9 +170,13 @@ QStringList DREAM3DSettings::childGroups()
 // -----------------------------------------------------------------------------
 void DREAM3DSettings::remove(const QString &key)
 {
-  QJsonObject obj = m_Stack.top()->group;
+  m_Stack.top()->group.remove(key);
 
-  obj.remove(key);
+  // If this is the root, write to the file
+  if (m_Stack.top()->groupName.isEmpty())
+  {
+    writeToFile();
+  }
 }
 
 // -----------------------------------------------------------------------------

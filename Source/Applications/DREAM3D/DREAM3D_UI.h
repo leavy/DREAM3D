@@ -128,14 +128,20 @@ class DREAM3D_UI : public QMainWindow, private Ui::DREAM3D_UI
     void versionCheckReply(UpdateCheckData*);
 
     /**
-    * @brief Reads the preferences from the users pref file
-    */
-    void readSettings();
-
-    /**
-     * @brief Writes the preferences to the users pref file
+     *
+     * @param prefs
      */
     void writeSettings();
+    void writeSettings(DREAM3DSettings &prefs);
+    void writeDockWidgetSettings(DREAM3DSettings &prefs);
+    void writeWindowSettings(DREAM3DSettings& prefs);
+    void writeVersionCheckSettings(DREAM3DSettings& prefs);
+
+    void readSettings();
+    void readSettings(DREAM3DSettings &prefs);
+    void readDockWidgetSettings(DREAM3DSettings &prefs);
+    void readWindowSettings(DREAM3DSettings& prefs);
+    void readVersionSettings(DREAM3DSettings& prefs);
 
     /**
     * @brief Checks if this the first run of DREAM3D
@@ -166,6 +172,13 @@ class DREAM3D_UI : public QMainWindow, private Ui::DREAM3D_UI
     * @param w
     */
     void setStatusBarMessage(const QString &msg);
+
+    /**
+    * @brief openNewPipeline
+    * @param filePath
+    * @param setOpenedFilePath
+    */
+    void openNewPipeline(const QString &filePath, const bool &setOpenedFilePath, const bool &addToRecentFiles);
 
   protected slots:
 
@@ -251,14 +264,6 @@ class DREAM3D_UI : public QMainWindow, private Ui::DREAM3D_UI
     * @brief markDocumentAsDirty
     */
     void markDocumentAsDirty();
-
-    /**
-    * @brief openNewPipeline
-    * @param filePath
-    * @param setOpenedFilePath
-    */
-    void openNewPipeline(const QString &filePath, const bool &setOpenedFilePath, const bool &addToRecentFiles);
-
 
     // Our Signals that we can emit custom for this class
   signals:
@@ -375,37 +380,12 @@ class DREAM3D_UI : public QMainWindow, private Ui::DREAM3D_UI
      */
     void dropEvent(QDropEvent*);
 
-    /**
-     *
-     * @param prefs
-     */
-    void writeWindowSettings(DREAM3DSettings& prefs);
-    void writeVersionCheckSettings(DREAM3DSettings& prefs);
-
-    void readWindowSettings(DREAM3DSettings& prefs);
-    void readVersionSettings(DREAM3DSettings& prefs);
-
     void checkForUpdatesAtStartup();
 
     /**
      * @brief Initializes some of the GUI elements with selections or other GUI related items
      */
     void setupGui();
-
-    /**
-     * @brief DREAM3D_UI::setupDockWidget
-     * @param prefs
-     * @param dw
-     */
-    void readDockWidgetSettings(DREAM3DSettings& prefs, QDockWidget* dw);
-
-    /**
-     * @brief writeDockWidgetSettings
-     * @param prefs
-     * @param dw
-     */
-    void writeDockWidgetSettings(DREAM3DSettings& prefs, QDockWidget* dw);
-
 
     void makeStatusBarButton(QString text, QDockWidget* dockWidget, QToolButton* btn, int index);
 

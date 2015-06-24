@@ -44,7 +44,6 @@
 #include <QtCore/QThread>
 #include <QtCore/QFileInfoList>
 #include <QtCore/QDateTime>
-#include <QtCore/QProcess>
 #include <QtCore/QMimeData>
 #include <QtCore/QDirIterator>
 #include <QtWidgets/QFileDialog>
@@ -228,9 +227,9 @@ void DREAM3D_UI::resizeEvent ( QResizeEvent* event )
 
   emit parentResized();
 
-  // We need to write the window settings so that any new windows will open with these window settings
-  DREAM3DSettings prefs;
-  writeWindowSettings(prefs);
+//  // We need to write the window settings so that any new windows will open with these window settings
+//  DREAM3DSettings prefs;
+//  writeWindowSettings(prefs);
 }
 
 // -----------------------------------------------------------------------------
@@ -245,6 +244,7 @@ void DREAM3D_UI::on_actionNew_triggered()
   newInstance->setLoadedPlugins(plugins);
   newInstance->setWindowTitle("[*]Untitled Pipeline - DREAM3D");
   newInstance->setAttribute(Qt::WA_DeleteOnClose);
+  newInstance->setGeometry(geometry());
   newInstance->move(this->x() + 45, this->y() + 45);
 
   // Register the DREAM3D window with the application
@@ -493,11 +493,24 @@ void DREAM3D_UI::closeWindow()
 // -----------------------------------------------------------------------------
 void DREAM3D_UI::closeEvent(QCloseEvent* event)
 {
+  DREAM3DSettings prefs;
   QMessageBox::StandardButton choice = checkDirtyDocument();
+
   if (choice == QMessageBox::Cancel)
   {
     event->ignore();
     return;
+  }
+
+  if (prefs.value("DREAM3D Mode", "").toString() == "Restart" && choice != QMessageBox::Discard)
+  {
+    prefs.beginGroup("Last Session");
+    int childCount = prefs.childGroups().size();
+    prefs.beginGroup("Window " + QString::number(childCount+1));
+    writeSettings(prefs);
+    prefs.setValue("Pipeline File", m_OpenedFilePath);
+    prefs.endGroup();
+    prefs.endGroup();
   }
 
   disconnectSignalsSlots();
@@ -516,34 +529,18 @@ void DREAM3D_UI::readSettings()
 {
   DREAM3DSettings prefs;
 
+  readSettings(prefs);
+}
+
+// -----------------------------------------------------------------------------
+//  Read our settings from a file
+// -----------------------------------------------------------------------------
+void DREAM3D_UI::readSettings(DREAM3DSettings &prefs)
+{
   // Have the pipeline builder read its settings from the prefs file
   readWindowSettings(prefs);
   readVersionSettings(prefs);
-
-  prefs.beginGroup("DockWidgetSettings");
-
-  // Read dock widget settings
-  prefs.beginGroup("Bookmarks Dock Widget");
-  bookmarksDockWidget->readSettings(this, prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Prebuilts Dock Widget");
-  prebuiltPipelinesDockWidget->readSettings(this, prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Filter List Dock Widget");
-  filterListDockWidget->readSettings(this, prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Filter Library Dock Widget");
-  filterLibraryDockWidget->readSettings(this, prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Issues Dock Widget");
-  issuesDockWidget->readSettings(this, prefs);
-  prefs.endGroup();
-
-  prefs.endGroup();
+  readDockWidgetSettings(prefs);
 
   QRecentFileList::instance()->readList(prefs);
 }
@@ -584,13 +581,32 @@ void DREAM3D_UI::readWindowSettings(DREAM3DSettings& prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void DREAM3D_UI::readDockWidgetSettings(DREAM3DSettings& prefs, QDockWidget* dw)
+void DREAM3D_UI::readDockWidgetSettings(DREAM3DSettings& prefs)
 {
-  restoreDockWidget(dw);
+  prefs.beginGroup("DockWidgetSettings");
 
-  QString name = dw->objectName();
-  bool b = prefs.value(dw->objectName(), false).toBool();
-  dw->setHidden(b);
+  // Read dock widget settings
+  prefs.beginGroup("Bookmarks Dock Widget");
+  bookmarksDockWidget->readSettings(this, prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Prebuilts Dock Widget");
+  prebuiltPipelinesDockWidget->readSettings(this, prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Filter List Dock Widget");
+  filterListDockWidget->readSettings(this, prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Filter Library Dock Widget");
+  filterLibraryDockWidget->readSettings(this, prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Issues Dock Widget");
+  issuesDockWidget->readSettings(this, prefs);
+  prefs.endGroup();
+
+  prefs.endGroup();
 }
 
 // -----------------------------------------------------------------------------
@@ -608,35 +624,21 @@ void DREAM3D_UI::writeSettings()
 {
   DREAM3DSettings prefs;
 
+  writeSettings(prefs);
+}
+
+// -----------------------------------------------------------------------------
+//  Write our Prefs to file
+// -----------------------------------------------------------------------------
+void DREAM3D_UI::writeSettings(DREAM3DSettings &prefs)
+{
   // Have the pipeline builder write its settings to the prefs file
   writeWindowSettings(prefs);
   // Have the version check widet write its preferences.
   writeVersionCheckSettings(prefs);
 
-  prefs.beginGroup("DockWidgetSettings");
-
   // Write dock widget settings
-  prefs.beginGroup("Bookmarks Dock Widget");
-  bookmarksDockWidget->writeSettings(prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Prebuilts Dock Widget");
-  prebuiltPipelinesDockWidget->writeSettings(prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Filter List Dock Widget");
-  filterListDockWidget->writeSettings(prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Filter Library Dock Widget");
-  filterLibraryDockWidget->writeSettings(prefs);
-  prefs.endGroup();
-
-  prefs.beginGroup("Issues Dock Widget");
-  issuesDockWidget->writeSettings(prefs);
-  prefs.endGroup();
-
-  prefs.endGroup();
+  writeDockWidgetSettings(prefs);
 
   QRecentFileList::instance()->writeList(prefs);
 }
@@ -671,9 +673,31 @@ void DREAM3D_UI::writeWindowSettings(DREAM3DSettings& prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void DREAM3D_UI::writeDockWidgetSettings(DREAM3DSettings& prefs, QDockWidget* dw)
+void DREAM3D_UI::writeDockWidgetSettings(DREAM3DSettings& prefs)
 {
-  prefs.setValue(dw->objectName(), dw->isHidden() );
+  prefs.beginGroup("DockWidgetSettings");
+
+  prefs.beginGroup("Bookmarks Dock Widget");
+  bookmarksDockWidget->writeSettings(prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Prebuilts Dock Widget");
+  prebuiltPipelinesDockWidget->writeSettings(prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Filter List Dock Widget");
+  filterListDockWidget->writeSettings(prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Filter Library Dock Widget");
+  filterLibraryDockWidget->writeSettings(prefs);
+  prefs.endGroup();
+
+  prefs.beginGroup("Issues Dock Widget");
+  issuesDockWidget->writeSettings(prefs);
+  prefs.endGroup();
+
+  prefs.endGroup();
 }
 
 // -----------------------------------------------------------------------------
@@ -1347,16 +1371,31 @@ QMessageBox::StandardButton DREAM3D_UI::checkDirtyDocument()
 
   if (this->isWindowModified() == true)
   {
-    int r = QMessageBox::warning(this, tr("DREAM.3D"),
-                                 tr("The Pipeline has been modified.\nDo you want to save your changes?"),
-                                 QMessageBox::Save | QMessageBox::Default,
-                                 QMessageBox::Discard,
-                                 QMessageBox::Cancel | QMessageBox::Escape);
+    QMessageBox* warningBox = new QMessageBox(QMessageBox::Warning,
+                                              "DREAM.3D",
+                                              "The Pipeline has been modified.\nDo you want to save your changes?",
+                                              QMessageBox::Save | QMessageBox::Abort | QMessageBox::Cancel | QMessageBox::Discard,
+                                              this);
+    warningBox->setDefaultButton(QMessageBox::Save);
+    warningBox->button(QMessageBox::Abort)->setText("Save As");
+    int r = warningBox->exec();
+
     if (r == QMessageBox::Save)
     {
       if (savePipeline() == true)
       {
         return QMessageBox::Save;
+      }
+      else
+      {
+        return QMessageBox::Cancel;
+      }
+    }
+    else if (r == QMessageBox::Abort) // This is really the "Save As" button
+    {
+      if (savePipelineAs() == true)
+      {
+        return QMessageBox::Abort;
       }
       else
       {
