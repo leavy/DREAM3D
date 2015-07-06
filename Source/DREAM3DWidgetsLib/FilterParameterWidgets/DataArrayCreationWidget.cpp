@@ -55,7 +55,7 @@ DataArrayCreationWidget::DataArrayCreationWidget(FilterParameter* parameter, Abs
   m_DidCausePreflight(false)
 {
   m_FilterParameter = dynamic_cast<DataArrayCreationFilterParameter*>(parameter);
-  Q_ASSERT_X(getFilterParameter() != NULL, "NULL Pointer", "DataArrayCreationWidget can ONLY be used with a DataArrayCreationFilterParameter object");
+  Q_ASSERT_X(m_FilterParameter != NULL, "NULL Pointer", "DataArrayCreationWidget can ONLY be used with a DataArrayCreationFilterParameter object");
 
   setupUi(this);
   setupGui();
@@ -122,10 +122,6 @@ void DataArrayCreationWidget::setupGui()
           this, SLOT(filterNeedsInputParameters(AbstractFilter*)));
 
   connect(dataArrayName, SIGNAL(textChanged(const QString&)),
-          this, SLOT(widgetChanged(const QString&)));
-  connect(attributeMatrixCombo, SIGNAL(currentIndexChanged(const QString&)),
-          this, SLOT(widgetChanged(const QString&)));
-  connect(dataContainerCombo, SIGNAL(currentIndexChanged(const QString&)),
           this, SLOT(widgetChanged(const QString&)));
 
   dataContainerCombo->blockSignals(true);
