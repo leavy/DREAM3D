@@ -106,7 +106,9 @@ endif()
     #set(CMAKE_MODULE_PATH ${HDF5_INSTALL}/share/cmake/hdf5 ${CMAKE_MODULE_PATH})
 #endif()
 
-find_package(HDF5 NAMES hdf5)
+# Homebrew HDF5 changes 
+#find_package(HDF5 NAMES hdf5)
+find_package(HDF5)
 if(HDF5_FOUND)
 
   GET_FILENAME_COMPONENT (HDF5_LIBRARY_DIRS "${HDF5_INCLUDE_DIRS}" PATH)
@@ -117,6 +119,7 @@ if(HDF5_FOUND)
   include_directories(${HDF5_INCLUDE_DIRS} )
 
   message(STATUS "HDF5 Location: ${HDF5_INSTALL}")
+  # Homebrew H5_VERSION vs HDF5_VERSION_STRING
   message(STATUS "HDF5 Version: ${HDF5_VERSION_STRING}")
   if(MSVC_IDE)
     set(BUILD_TYPES Debug Release)
