@@ -174,7 +174,22 @@ void FindRelativeMotionBetweenSlices::setupFilterParameters()
   parameters.push_back(IntFilterParameter::New("Search Distance 2", "SSize2", getSSize2(), FilterParameter::Parameter));
   parameters.push_back(IntFilterParameter::New("Slice Step", "SliceStep", getSliceStep(), FilterParameter::Parameter));
   parameters.push_back(SeparatorFilterParameter::New("Cell Data", FilterParameter::RequiredArray));
-  parameters.push_back(DataArraySelectionFilterParameter::New("Attribute Array to Track Motion", "SelectedArrayPath", getSelectedArrayPath(), FilterParameter::RequiredArray));
+  {
+    DataArraySelectionFilterParameter::DataStructureRequirements req = DataArraySelectionFilterParameter::CreateRequirement(DREAM3D::TypeNames::UnknownType, 1, DREAM3D::AttributeMatrixType::Cell, DREAM3D::GeometryType::ImageGeometry);
+    QVector<QString> daTypes;
+    daTypes.push_back(DREAM3D::TypeNames::Int8);
+    daTypes.push_back(DREAM3D::TypeNames::Int16);
+    daTypes.push_back(DREAM3D::TypeNames::Int32);
+    daTypes.push_back(DREAM3D::TypeNames::Int64);
+    daTypes.push_back(DREAM3D::TypeNames::UInt8);
+    daTypes.push_back(DREAM3D::TypeNames::UInt16);
+    daTypes.push_back(DREAM3D::TypeNames::UInt32);
+    daTypes.push_back(DREAM3D::TypeNames::UInt64);
+    daTypes.push_back(DREAM3D::TypeNames::Float);
+    daTypes.push_back(DREAM3D::TypeNames::Double);
+    req.daTypes = daTypes;
+    parameters.push_back(DataArraySelectionFilterParameter::New("Attribute Array to Track Motion", "SelectedArrayPath", getSelectedArrayPath(), FilterParameter::RequiredArray, req));
+  }
   parameters.push_back(SeparatorFilterParameter::New("Cell Data", FilterParameter::CreatedArray));
   parameters.push_back(StringFilterParameter::New("Motion Direction", "MotionDirectionArrayName", getMotionDirectionArrayName(), FilterParameter::CreatedArray));
   setFilterParameters(parameters);
@@ -481,13 +496,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<int8_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<int8_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<int8_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<UInt8ArrayType>()(m_InDataPtr.lock()))
@@ -497,13 +512,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<uint8_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<uint8_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<uint8_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<Int16ArrayType>()(m_InDataPtr.lock()))
@@ -513,13 +528,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<int16_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<int16_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<int16_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<UInt16ArrayType>()(m_InDataPtr.lock()))
@@ -529,13 +544,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<uint16_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<uint16_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<uint16_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<Int32ArrayType>()(m_InDataPtr.lock()))
@@ -545,13 +560,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<int32_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<int32_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<int32_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<UInt32ArrayType>()(m_InDataPtr.lock()))
@@ -561,13 +576,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<uint32_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<uint32_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<uint32_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<Int64ArrayType>()(m_InDataPtr.lock()))
@@ -577,13 +592,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<int64_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<int64_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<int64_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<UInt64ArrayType>()(m_InDataPtr.lock()))
@@ -593,13 +608,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<uint64_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<uint64_t>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<uint64_t> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<FloatArrayType>()(m_InDataPtr.lock()))
@@ -609,13 +624,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<float>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<float>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<float> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else if (TemplateHelpers::CanDynamicCast<DoubleArrayType>()(m_InDataPtr.lock()))
@@ -625,13 +640,13 @@ void FindRelativeMotionBetweenSlices::execute()
 #ifdef DREAM3D_USE_PARALLEL_ALGORITHMS
     if (doParallel == true)
     {
-      tbb::parallel_for(tbb::blocked_range<size_t>(0, count), CalcRelativeMotion<double>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
+      tbb::parallel_for(tbb::blocked_range<size_t>(0, totalPoints), CalcRelativeMotion<double>(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints), tbb::auto_partitioner());
     }
     else
 #endif
     {
       CalcRelativeMotion<double> serial(cPtr, m_MotionDirection, patchPoints, searchPoints, validPoints, numPatchPoints, numSearchPoints);
-      serial.convert(0, count);
+      serial.convert(0, totalPoints);
     }
   }
   else
