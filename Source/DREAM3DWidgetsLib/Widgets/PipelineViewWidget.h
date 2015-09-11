@@ -284,6 +284,8 @@ class DREAM3DWidgetsLib_EXPORT PipelineViewWidget : public QFrame
     */
     void toIdleState();
 
+  public slots:
+    void showFilterHelp(const QString& className);
 
   signals:
     void addPlaceHolderFilter(QPoint p);

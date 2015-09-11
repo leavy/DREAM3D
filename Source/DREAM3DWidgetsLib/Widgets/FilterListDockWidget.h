@@ -144,7 +144,6 @@ class DREAM3DWidgetsLib_EXPORT FilterListDockWidget : public QDockWidget, privat
      */
     void filterItemDoubleClicked(const QString& filterName);
 
-
   protected:
 
     /**

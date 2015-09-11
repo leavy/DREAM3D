@@ -32,8 +32,6 @@
 *    United States Prime Contract Navy N00173-07-C-2068
 *
 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-
 #include "FilterLibraryDockWidget.h"
 
 #include <QtCore/QFileInfo>
@@ -42,10 +40,9 @@
 
 #include "SIMPLib/Common/IFilterFactory.hpp"
 #include "SIMPLib/Common/FilterFactory.hpp"
+#include "SIMPLib/Common/DocRequestManager.h"
 
 #include "FilterListDockWidget.h"
-
-#include "DREAM3DWidgetsLib/Widgets/DREAM3DUserManualDialog.h"
 
 #include "DREAM3DWidgetsLib/moc_FilterLibraryDockWidget.cpp"
 
@@ -251,8 +248,10 @@ void FilterLibraryDockWidget::launchHelpForItem(QString humanLabel)
     return;
   }
   QString className = filter->getNameOfClass();
-  // Launch the dialog
-  DREAM3DUserManualDialog::LaunchHelpDialog(className);
+
+  DocRequestManager* docRequester = DocRequestManager::Instance();
+  docRequester->requestFilterDocs(className);
+
 }
 
 // -----------------------------------------------------------------------------

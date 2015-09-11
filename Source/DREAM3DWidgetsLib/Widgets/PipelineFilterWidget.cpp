@@ -54,11 +54,11 @@
 
 
 #include "QtSupportLib/DREAM3DStyles.h"
-#include "QtSupportLib/DREAM3DHelpUrlGenerator.h"
 
 #include "SIMPLib/Common/FilterManager.h"
 #include "SIMPLib/Common/IFilterFactory.hpp"
 #include "SIMPLib/Common/FilterFactory.hpp"
+#include "SIMPLib/Common/DocRequestManager.h"
 #include "SIMPLib/FilterParameters/LinkedChoicesFilterParameter.h"
 #include "SIMPLib/FilterParameters/LinkedBooleanFilterParameter.h"
 #include "SIMPLib/FilterParameters/DataContainerReaderFilterParameter.h"
@@ -70,8 +70,6 @@
 #include "DREAM3DWidgetsLib/FilterParameterWidgets/ChoiceWidget.h"
 #include "DREAM3DWidgetsLib/Widgets/PipelineViewWidget.h"
 #include "DREAM3DWidgetsLib/Widgets/DataContainerArrayWidget.h"
-#include "DREAM3DWidgetsLib/Widgets/DREAM3DUserManualDialog.h"
-
 
 
 #define PADDING 5
@@ -932,8 +930,9 @@ void PipelineFilterWidget::launchHelpForItem()
 {
   QString className = getFilterClassName();
 
-  // Launch the dialog
-  DREAM3DUserManualDialog::LaunchHelpDialog(className);
+  DocRequestManager* docRequester = DocRequestManager::Instance();
+  docRequester->requestFilterDocs(className);
+
 }
 
 // -----------------------------------------------------------------------------
