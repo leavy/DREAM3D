@@ -170,6 +170,8 @@ ScalarSegmentFeatures::ScalarSegmentFeatures() :
   m_FeatureIds(NULL),
   m_Active(NULL)
 {
+  m_BeenPicked = NULL;
+
   setupFilterParameters();
 }
 
@@ -264,8 +266,6 @@ void ScalarSegmentFeatures::dataCheck()
 
   SegmentFeatures::dataCheck();
   if(getErrorCondition() < 0) { return; }
-
-
 
   DataContainer::Pointer m = getDataContainerArray()->getPrereqDataContainer<AbstractFilter>(this, getDataContainerName(), false);
   if(getErrorCondition() < 0 || NULL == m.get()) { return; }
@@ -386,7 +386,8 @@ int64_t ScalarSegmentFeatures::getSeed(int32_t gnum)
   {
     // Get the next voxel index in the precomputed list of voxel seeds
     int64_t randpoint = numberGenerator();
-    m_TotalRandomNumbersGenerated++; // Increment this counter
+    if (m_BeenPicked[randpoint] == false) { m_TotalRandomNumbersGenerated++; } // Increment this counter
+    m_BeenPicked[randpoint] = true;
     if (m_FeatureIds[randpoint] == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
       if (m_UseGoodVoxels == false || m_GoodVoxels[randpoint] == true)
@@ -451,6 +452,10 @@ void ScalarSegmentFeatures::execute()
 
   int64_t totalPoints = static_cast<int64_t>(m_FeatureIdsPtr.lock()->getNumberOfTuples());
   int64_t inDataPoints = static_cast<int64_t>(m_InputDataPtr.lock()->getNumberOfTuples());
+
+  m_BeenPickedPtr = BoolArrayType::CreateArray(totalPoints, "BeenPicked INTERNAL ARRAY ONLY");
+  m_BeenPickedPtr->initializeWithValue(0);
+  m_BeenPicked = m_BeenPickedPtr->getPointer(0);
 
   QString dType = m_InputDataPtr.lock()->getTypeAsString();
   if (m_InputDataPtr.lock()->getNumberOfComponents() != 1)

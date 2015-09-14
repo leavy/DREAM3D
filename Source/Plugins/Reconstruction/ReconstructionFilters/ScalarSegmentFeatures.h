@@ -163,6 +163,9 @@ class ScalarSegmentFeatures : public SegmentFeatures
     DEFINE_DATAARRAY_VARIABLE(int32_t, FeatureIds)
     DEFINE_DATAARRAY_VARIABLE(bool, Active)
 
+    BoolArrayType::Pointer m_BeenPickedPtr;
+    bool* m_BeenPicked;
+
     boost::shared_ptr<CompareFunctor> m_Compare;
 
     boost::shared_ptr<NumberDistribution> m_Distribution;
