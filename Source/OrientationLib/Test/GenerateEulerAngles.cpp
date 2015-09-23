@@ -1,20 +1,21 @@
 /*
- * Your License or Copyright can go here
+ * Your License or Copyright Information can go here
  */
 
-#include "@ClassName@.h"
+#include "GenerateEulerAngles.h"
 
-#include "SIMPLib/Common/Constants.h"
-#include "SIMPLib/FilterParameters/AbstractFilterParametersReader.h"
+#include <QtCore/QString>
+
 #include "SIMPLib/FilterParameters/AbstractFilterParametersWriter.h"
-@Filter_CPP_Includes@
-#include "@PluginName@/@PluginName@Constants.h"
+#include "SIMPLib/FilterParameters/AbstractFilterParametersReader.h"
+
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-@ClassName@::@ClassName@() :
-@InitList@
+GenerateEulerAngles::GenerateEulerAngles() :
+  AbstractFilter()
+  /* DO NOT FORGET TO INITIALIZE ALL YOUR DREAM3D Filter Parameters HERE */
 {
   setupFilterParameters();
 }
@@ -22,37 +23,42 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-@ClassName@::~@ClassName@()
+GenerateEulerAngles::~GenerateEulerAngles()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void @ClassName@::setupFilterParameters()
+void GenerateEulerAngles::setupFilterParameters()
 {
   FilterParameterVector parameters;
-@SetupFPContents@
+
   setFilterParameters(parameters);
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void @ClassName@::readFilterParameters(AbstractFilterParametersReader* reader, int index)
+void GenerateEulerAngles::readFilterParameters(AbstractFilterParametersReader* reader, int index)
 {
   reader->openFilterGroup(this, index);
-@ReadFPContents@
+  /*
+   Place code in here that will read the parameters from a file
+   setOutputFile( reader->readValue("OutputFile", getOutputFile() ) );
+   */
   reader->closeFilterGroup();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int @ClassName@::writeFilterParameters(AbstractFilterParametersWriter* writer, int index)
+int GenerateEulerAngles::writeFilterParameters(AbstractFilterParametersWriter* writer, int index)
 {
   writer->openFilterGroup(this, index);
-@WriteFPContents@
+  SIMPL_FILTER_WRITE_PARAMETER(FilterVersion)
+  /* Place code that will write the inputs values into a file. reference the AbstractFilterParametersWriter class for the proper API to use. */
+  /*  SIMPL_FILTER_WRITE_PARAMETER(OutputFile) */
   writer->closeFilterGroup();
   return ++index; // we want to return the next index that was just written to
 }
@@ -60,16 +66,16 @@ int @ClassName@::writeFilterParameters(AbstractFilterParametersWriter* writer, i
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void @ClassName@::dataCheck()
+void GenerateEulerAngles::dataCheck()
 {
   setErrorCondition(0);
-@DataCheckContents@
+
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void @ClassName@::preflight()
+void GenerateEulerAngles::preflight()
 {
   // These are the REQUIRED lines of CODE to make sure the filter behaves correctly
   setInPreflight(true); // Set the fact that we are preflighting.
@@ -83,15 +89,20 @@ void @ClassName@::preflight()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void @ClassName@::execute()
+void GenerateEulerAngles::execute()
 {
-  setErrorCondition(0);
+  int err = 0;
+  // typically run your dataCheck function to make sure you can get that far and all your variables are initialized
   dataCheck();
+  // Check to make sure you made it through the data check. Errors would have been reported already so if something
+  // happens to fail in the dataCheck() then we simply return
   if(getErrorCondition() < 0) { return; }
+  setErrorCondition(0);
 
-  if (getCancel() == true) { return; }
+  /* Place all your code to execute your filter here. */
 
-  if (getErrorCondition() < 0)
+  /* If some error occurs this code snippet can report the error up the call chain*/
+  if (err < 0)
   {
     QString ss = QObject::tr("Some error message");
     setErrorCondition(-99999999);
@@ -99,15 +110,19 @@ void @ClassName@::execute()
     return;
   }
 
+  /* Let the GUI know we are done with this filter */
   notifyStatusMessage(getHumanLabel(), "Complete");
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-AbstractFilter::Pointer @ClassName@::newFilterInstance(bool copyFilterParameters)
+AbstractFilter::Pointer GenerateEulerAngles::newFilterInstance(bool copyFilterParameters)
 {
-  @ClassName@::Pointer filter = @ClassName@::New();
+  /*
+  * write code to optionally copy the filter parameters from the current filter into the new instance
+  */
+  GenerateEulerAngles::Pointer filter = GenerateEulerAngles::New();
   if(true == copyFilterParameters)
   {
     copyFilterParameterInstanceVariables(filter.get());
@@ -115,27 +130,35 @@ AbstractFilter::Pointer @ClassName@::newFilterInstance(bool copyFilterParameters
   return filter;
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-const QString @ClassName@::getCompiledLibraryName()
-{ return @PluginName@Constants::@PluginName@BaseName; }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString @ClassName@::getGroupName()
-{ return DREAM3D::FilterGroups::Unsupported; }
+const QString GenerateEulerAngles::getCompiledLibraryName()
+{
+  return "Unknown";
+}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString @ClassName@::getSubGroupName()
-{ return "@PluginName@"; }
+const QString GenerateEulerAngles::getGroupName()
+{
+  return DREAM3D::FilterGroups::Unsupported;
+}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString @ClassName@::getHumanLabel()
-{ return "@ClassName@"; }
+const QString GenerateEulerAngles::getSubGroupName()
+{
+  return "Misc";
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+const QString GenerateEulerAngles::getHumanLabel()
+{
+  return "Bruker Raw EDS Import";
+}

@@ -249,7 +249,7 @@ void GenerateEnsembleStatistics::setupFilterParameters()
   linkedProps << "RDFArrayPath" << "MaxMinRDFArrayPath";
   parameters.push_back(LinkedBooleanFilterParameter::New("Include Radial Distribution Function", "IncludeRadialDistFunc", getIncludeRadialDistFunc(), linkedProps, FilterParameter::Parameter));
   {
-    DataArraySelectionFilterParameter::RequirementType req = DataArraySelectionFilterParameter::CreateCategoryRequirement(DREAM3D::TypeNames::Float, 1, DREAM3D::AttributeMatrixObjectType::Ensemble);
+    DataArraySelectionFilterParameter::RequirementType req = DataArraySelectionFilterParameter::CreateCategoryRequirement(DREAM3D::TypeNames::Float, DREAM3D::Defaults::AnyComponentSize, DREAM3D::AttributeMatrixObjectType::Ensemble);
     parameters.push_back(DataArraySelectionFilterParameter::New("Radial Distribution Function", "RDFArrayPath", getRDFArrayPath(), FilterParameter::RequiredArray, req));
   }
   {
@@ -434,8 +434,7 @@ void GenerateEnsembleStatistics::dataCheck()
 
   if (m_IncludeRadialDistFunc == true)
   {
-    cDims[0] = 1;
-    DataArray<float>::Pointer tempPtr = getDataContainerArray()->getPrereqArrayFromPath<DataArray<float>, AbstractFilter>(this, getRDFArrayPath(), cDims);
+    DataArray<float>::Pointer tempPtr = getDataContainerArray()->getPrereqIDataArrayFromPath<DataArray<float>, AbstractFilter>(this, getRDFArrayPath());
     if (NULL != tempPtr.get())
     {
       m_RadialDistFuncPtr = tempPtr;
@@ -1303,14 +1302,14 @@ void GenerateEnsembleStatistics::execute()
   {
     if( static_cast<int32_t>(m_PhaseTypeData.d.size()) < totalEnsembles)
     {
-      setErrorCondition(-999);
+      setErrorCondition(-3013);
       notifyErrorMessage(getHumanLabel(), "The number of phase types entered is less than the number of Ensembles", -999);
       return;
     }
     if (static_cast<int32_t>(m_PhaseTypeData.d.size()) > totalEnsembles)
     {
       QString ss = QObject::tr("The number of phase types entered is more than the number of Ensembles. Only the first %1 will be used").arg(totalEnsembles - 1);
-      notifyErrorMessage(getHumanLabel(), ss, -999);
+      notifyErrorMessage(getHumanLabel(), ss, -3014);
     }
     for (int32_t r = 0; r < totalEnsembles; ++r)
     {
