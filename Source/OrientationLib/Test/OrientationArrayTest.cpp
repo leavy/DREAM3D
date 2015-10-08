@@ -25,6 +25,7 @@
 #include "SIMPLib/Math/SIMPLibMath.h"
 #include "SIMPLib/Math/QuaternionMath.hpp"
 #include "SIMPLib/Math/MatrixMath.h"
+#include "SIMPLib/Math/ArrayHelpers.hpp"
 #include "SIMPLib/Utilities/UnitTestSupport.hpp"
 
 using namespace SIMPLib::Constants;
@@ -34,7 +35,6 @@ using namespace SIMPLib::Constants;
 #include "OrientationLib/OrientationMath/OrientationArray.hpp"
 #include "OrientationLib/OrientationMath/OrientationTransforms.hpp"
 #include "OrientationLib/OrientationMath/OrientationConverter.hpp"
-#include "OrientationLib/Utilities/OrientationMathHelpers.hpp"
 
 #include "OrientationLib/Test/OrientationLibTestFileLocations.h"
 
@@ -980,16 +980,6 @@ void Test_ho2_XXX()
   HO_2_XXX<FloatQVectorType>(ho);
 }
 
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-bool closeEnough(const float& a, const float& b,
-                 const float& epsilon = std::numeric_limits<float>::epsilon())
-{
-  return (epsilon > std::abs(a - b));
-}
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1040,11 +1030,11 @@ void TestInputs()
     DREAM3D_REQUIRE_EQUAL(eu[1], fPtr[4]);
     DREAM3D_REQUIRE_EQUAL(eu[2], fPtr[5]);
 
-    bool b = closeEnough(eu[0], fPtr[3]);
+    bool b = SIMPLibMath::closeEnough(eu[0], fPtr[3]);
     DREAM3D_REQUIRE_EQUAL(b, true)
-    b = closeEnough(eu[1], fPtr[4]);
+    b = SIMPLibMath::closeEnough(eu[1], fPtr[4]);
     DREAM3D_REQUIRE_EQUAL(b, true)
-    b = closeEnough(eu[2], fPtr[5]);
+    b = SIMPLibMath::closeEnough(eu[2], fPtr[5]);
     DREAM3D_REQUIRE_EQUAL(b, true)
   }
 
@@ -1052,6 +1042,50 @@ void TestInputs()
 
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QuatTest()
+{
+    QuatF q = QuaternionMathF::New(-0.5f, -0.5f, -0.5f, 0.5f);
+  std::vector<float> qVec(4, -0.5f), gVec(9, 0);
+  qVec[3] = 0.5;
+  OrientationTransforms<std::vector<float>, float>::qu2om(qVec, gVec);
+
+  OrientationPrinters::Print_OM<std::vector<float> >(gVec);
+
+  float g[3][3];
+
+  g[0][0] = gVec[0];
+  g[0][1] = gVec[1];
+  g[0][2] = gVec[2];
+  g[1][0] = gVec[3];
+  g[1][1] = gVec[4];
+  g[1][2] = gVec[5];
+  g[2][0] = gVec[6];
+  g[2][1] = gVec[7];
+  g[2][2] = gVec[8];
+
+
+  for(size_t r = 0; r < 3; r++) {
+    for(size_t c = 0; c < 3; c++) {
+      g[c][r] = gVec[3 * r + c];
+      std::cout << c << "," << r << "=" << g[c][r] << std::endl;
+    }
+  }
+
+  float vq[3], vg[3];
+  float v[3] = {1.0f, 0.0f, 0.0f};
+
+  // Mathematically correct, results unintuitive
+  QuaternionMathF::MultiplyQuatVec(q, v, vq);
+
+  std::cout << "vq: " << vq[0] << "," << vq[1] << "," << vq[2] << std::endl;
+
+  MatrixMath::Multiply3x3with3x1(g, v, vg);
+  std::cout  << "vg: " << vg[0] << "," << vg[1] << "," << vg[2] << std::endl;
+
+}
 
 // -----------------------------------------------------------------------------
 //  Use test framework
@@ -1071,9 +1105,9 @@ int main(int argc, char* argv[])
 //  DREAM3D_REGISTER_TEST( Test_om_check() );
 //  DREAM3D_REGISTER_TEST( Test_GenRot() )
 
-
   DREAM3D_REGISTER_TEST( Test_eu2_XXX<double>() );
   DREAM3D_REGISTER_TEST( Test_eu2_XXX<float>() );
+
 //  DREAM3D_REGISTER_TEST( Test_ax2_XXX() );
 //  DREAM3D_REGISTER_TEST( Test_om2_XXX() );
 //  DREAM3D_REGISTER_TEST( Test_ro2_XXX() );

@@ -404,12 +404,13 @@ class QuaternionMath
     * @param qr
     * @param misoVec
     */
-    static void GetMisorientationVector(Quaternion& qr, float misoVec[3])
+    static void GetMisorientationVector(Quaternion& qr, T misoVec[3])
     {
-      float qw = qr.w;
-      SIMPLibMath::boundF(qw, -1, 1);
-      double constVal = 2 * acos(qw) / (sqrt(1 - (qw * qw)));
+      T qw = qr.w;
+      SIMPLibMath::boundF(qw, -1.0, 1.0);
+      T constVal = 0.0;
       if(qw == 1.0 || qw == -1.0) { constVal = 0.0; }
+      else { constVal = 2 * acos(qw) / (sqrt(1.0 - (qw * qw))); }
       misoVec[0] = float( qr.x * constVal );
       misoVec[1] = float( qr.y * constVal );
       misoVec[2] = float( qr.z * constVal );
@@ -420,10 +421,10 @@ class QuaternionMath
      * @param q Input Quaternion
      * @param v Input Vector
      * @param out Output Vector
-     * @param rotationType  The type of rotation to perform. ACTIVE = -1.0. PASSIVE = 1.0. DREAM.3D uses
+     * DREAM.3D uses
      * PASSIVE rotations by default.
      */
-    static void MultiplyQuatVec(const Quaternion q, T* v, T* out, T rotationType)
+    static void MultiplyQuatVec(const Quaternion q, T* v, T* out)
     {
       T qx2 = q.x * q.x;
       T qy2 = q.y * q.y;
@@ -434,13 +435,14 @@ class QuaternionMath
       T qyz = q.y * q.z;
       T qzx = q.z * q.x;
 
-      T qxw = rotationType * q.x * q.w;
-      T qyw = rotationType * q.y * q.w;
-      T qzw = rotationType * q.z * q.w;
+      T qxw = q.x * q.w;
+      T qyw = q.y * q.w;
+      T qzw = q.z * q.w;
 
       out[0] = v[0] * (qx2 - qy2 - qz2 + qw2) + 2 * ( v[1] * (qxy + qzw) + v[2] * (qzx - qyw) );
       out[1] = v[1] * (qy2 - qx2 - qz2 + qw2) + 2 * ( v[2] * (qyz + qxw) + v[0] * (qxy - qzw) );
       out[2] = v[2] * (qz2 - qx2 - qy2 + qw2) + 2 * ( v[0] * (qzx + qyw) + v[1] * (qyz - qxw) );
+
     }
 
     /**
