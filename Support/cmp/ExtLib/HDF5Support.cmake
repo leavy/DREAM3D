@@ -111,7 +111,7 @@ endif()
 find_package(HDF5)
 if(HDF5_FOUND)
 
-  GET_FILENAME_COMPONENT (HDF5_LIBRARY_DIRS "${HDF5_INCLUDE_DIRS}" PATH)
+  GET_FILENAME_COMPONENT (HDF5_LIBRARY_DIRS "${HDF5_INCLUDE_DIR}" PATH)
   set(HDF5_LIBRARY_DIRS ${HDF5_LIBRARY_DIRS}/lib)
   file(APPEND ${CMP_PLUGIN_SEARCHDIR_FILE} "${HDF5_LIBRARY_DIRS};")
   # Add the library directory to the file that has all the search directories stored in it.
@@ -121,7 +121,7 @@ if(HDF5_FOUND)
   message(STATUS "HDF5 Location: ${HDF5_INSTALL}")
   # Homebrew H5_VERSION vs HDF5_VERSION_STRING
   message(STATUS "HDF5 Version: ${HDF5_VERSION_STRING}")
-  message(STATUS "HDF5 LIBRARY DIR: ${HDF5_LIBRARY_DIRS}")
+  #message(STATUS "HDF5 LIBRARY DIR: ${HDF5_LIBRARY_DIRS}")
   if(MSVC_IDE)
     set(BUILD_TYPES Debug Release)
   else()
