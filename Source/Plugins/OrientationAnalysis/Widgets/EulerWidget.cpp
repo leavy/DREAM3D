@@ -78,6 +78,8 @@ void EulerWidget::setupGui()
 // -----------------------------------------------------------------------------
 void EulerWidget::updateData(OrientationUtilityCalculator* calculator)
 {
+  setStyleSheet("");
+
   if (calculator->getInputType() == OrientationConverter<double>::Euler)
   {
     // The input type is the same as this widget, so don't update
@@ -88,6 +90,7 @@ void EulerWidget::updateData(OrientationUtilityCalculator* calculator)
     e1->setText("nan");
     e2->setText("nan");
     e3->setText("nan");
+    setStyleSheet("QLineEdit{border: 2px solid FireBrick}");
     return;
   }
 
@@ -171,7 +174,7 @@ QVector<double> EulerWidget::getValues()
     }
     else
     {
-      e1->setText("3.14159265359");
+      e1->setText(QString::number(SIMPLib::Constants::k_Pi));
     }
   }
   else if (e1->text() == "nan")
@@ -187,7 +190,7 @@ QVector<double> EulerWidget::getValues()
     }
     else
     {
-      e2->setText("3.14159265359");
+      e2->setText(QString::number(SIMPLib::Constants::k_Pi));
     }
   }
   else if (e2->text() == "nan")
@@ -203,7 +206,7 @@ QVector<double> EulerWidget::getValues()
     }
     else
     {
-      e3->setText("3.14159265359");
+      e3->setText(QString::number(SIMPLib::Constants::k_Pi));
     }
   }
   else if (e3->text() == "nan")
