@@ -752,12 +752,14 @@ void MatchCrystallography::matchCrystallography(size_t ensem)
     {
       counter = 0;
       selectedfeature1 = int32_t(rg.genrand_res53() * totalFeatures);
+      if (selectedfeature1 >= totalFeatures) { selectedfeature1 = selectedfeature1 - totalFeatures; }
       while ((m_SurfaceFeatures[selectedfeature1] == true || m_FeaturePhases[selectedfeature1] != static_cast<int32_t>(ensem)) && counter < totalFeatures)
       {
         if (selectedfeature1 >= totalFeatures) { selectedfeature1 = selectedfeature1 - totalFeatures; }
         selectedfeature1++;
         counter++;
       }
+      if (selectedfeature1 >= totalFeatures) { selectedfeature1 = selectedfeature1 - totalFeatures; }
       if (counter == totalFeatures)
       {
         badtrycount = 10 * m_NumFeatures[ensem];
@@ -831,12 +833,14 @@ void MatchCrystallography::matchCrystallography(size_t ensem)
     {
       counter = 0;
       selectedfeature1 = int32_t(rg.genrand_res53() * totalFeatures);
+      if (selectedfeature1 >= totalFeatures) { selectedfeature1 = selectedfeature1 - totalFeatures; }
       while ((m_SurfaceFeatures[selectedfeature1] == true || m_FeaturePhases[selectedfeature1] != static_cast<int32_t>(ensem)) && counter < totalFeatures)
       {
         if (selectedfeature1 >= totalFeatures) { selectedfeature1 = selectedfeature1 - totalFeatures; }
         selectedfeature1++;
         counter++;
       }
+      if (selectedfeature1 >= totalFeatures) { selectedfeature1 = selectedfeature1 - totalFeatures; }
       if (counter == totalFeatures)
       {
         badtrycount = 10 * m_NumFeatures[ensem];
@@ -845,12 +849,14 @@ void MatchCrystallography::matchCrystallography(size_t ensem)
       {
         counter = 0;
         selectedfeature2 = int32_t(rg.genrand_res53() * totalFeatures);
+        if (selectedfeature2 >= totalFeatures) { selectedfeature2 = selectedfeature2 - totalFeatures; }
         while ((m_SurfaceFeatures[selectedfeature2] == true || m_FeaturePhases[selectedfeature2] != static_cast<int32_t>(ensem) || selectedfeature2 == selectedfeature1) && counter < totalFeatures)
         {
           if (selectedfeature2 >= totalFeatures) { selectedfeature2 = selectedfeature2 - totalFeatures; }
           selectedfeature2++;
           counter++;
         }
+        if (selectedfeature2 >= totalFeatures) { selectedfeature2 = selectedfeature2 - totalFeatures; }
         if (counter == totalFeatures)
         {
           badtrycount = 10 * m_NumFeatures[ensem];
