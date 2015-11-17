@@ -60,6 +60,7 @@
 #include "moc_FindGBCDMetricBased.cpp"
 
 #include "SIMPLib/FilterParameters/SeparatorFilterParameter.h"
+#include "SIMPLib/Geometry/TriangleGeom.h"
 #include <QtCore/QDir>
 #include "OrientationLib/SpaceGroupOps/SpaceGroupOps.h"
 #include <cmath>
@@ -1000,7 +1001,7 @@ void FindGBCDMetricBased::execute()
   for (size_t i = 0; i < numMeshTris; i = i + trisChunkSize)
   {
     if (getCancel() == true) { return; }
-    ss = QObject::tr("|| Step 1/2: Selecting Triangles with the Specified Misorientation (%1\% completed)").arg(int(100.0 * float(i) / float(numMeshTris)));
+    ss = QObject::tr("|| Step 1/2: Selecting Triangles with the Specified Misorientation (%1% completed)").arg(int(100.0 * float(i) / float(numMeshTris)));
     notifyStatusMessage(getMessagePrefix(), getHumanLabel(), ss);
     if (i + trisChunkSize >= numMeshTris)
     {
@@ -1088,7 +1089,7 @@ void FindGBCDMetricBased::execute()
 	for (size_t i = 0; i < samplPtsX.size(); i = i + pointsChunkSize)
 	{
 		if (getCancel() == true) { return; }
-		ss = QObject::tr("|| Step 2/2: Computing Distribution Values at the Section of Interest (%1\% completed)").arg(int(100.0 * float(i) / float(samplPtsX.size())));
+		ss = QObject::tr("|| Step 2/2: Computing Distribution Values at the Section of Interest (%1% completed)").arg(int(100.0 * float(i) / float(samplPtsX.size())));
 		notifyStatusMessage(getMessagePrefix(), getHumanLabel(), ss);
 		if (i + pointsChunkSize >= samplPtsX.size())
 		{
