@@ -32,8 +32,11 @@
 *    United States Prime Contract Navy N00173-07-C-2068
 *
 * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef _MultiDataArraySelectionWidget_H_
-#define _MultiDataArraySelectionWidget_H_
+
+#ifndef _DataContainerCreationWidget_H_
+#define _DataContainerCreationWidget_H_
+
+
 
 
 #include <QtCore/QObject>
@@ -42,26 +45,22 @@
 
 #include "QtSupportLib/FaderWidget.h"
 
-#include "SIMPLib/SIMPLib.h"
-#include "SIMPLib/DataContainers/DataContainerArrayProxy.h"
-
+#include "SIMPLib/Common/AbstractFilter.h"
+#include "SIMPLib/FilterParameters/DataContainerCreationFilterParameter.h"
 
 #include "DREAM3DWidgetsLib/DREAM3DWidgetsLib.h"
 #include "DREAM3DWidgetsLib/FilterParameterWidgets/FilterParameterWidget.h"
 
 
-#include "DREAM3DWidgetsLib/ui_MultiDataArraySelectionWidget.h"
+#include "DREAM3DWidgetsLib/ui_DataContainerCreationWidget.h"
 
-class FilterParameter;
-class AbstractFilter;
-class MultiDataArraySelectionFilterParameter;
 
 /**
-* @brief
+* @brief This widget is for Filter Parameters that are of a string type.
 * @author
 * @version
 */
-class DREAM3DWidgetsLib_EXPORT MultiDataArraySelectionWidget : public FilterParameterWidget, private Ui::MultiDataArraySelectionWidget
+class DREAM3DWidgetsLib_EXPORT DataContainerCreationWidget : public FilterParameterWidget, private Ui::DataContainerCreationWidget
 {
     Q_OBJECT
 
@@ -72,65 +71,26 @@ class DREAM3DWidgetsLib_EXPORT MultiDataArraySelectionWidget : public FilterPara
     * @param filter The instance of the filter that this parameter is a part of
     * @param parent The parent QWidget for this Widget
     */
-    MultiDataArraySelectionWidget(FilterParameter* parameter, AbstractFilter* filter = NULL, QWidget* parent = NULL);
+    DataContainerCreationWidget(FilterParameter* parameter, AbstractFilter* filter = NULL, QWidget* parent = NULL);
 
-    MultiDataArraySelectionWidget(QWidget* parent = NULL);
-
-    virtual ~MultiDataArraySelectionWidget();
+    virtual ~DataContainerCreationWidget();
 
     /**
     * @brief This method does additional GUI widget connections
     */
     void setupGui();
 
-    /**
-    * @brief checkStringValues
-    * @param current
-    * @param filt
-    * @return
-    */
-    QString checkStringValues(QString current, QString filtDcName);
-
-    /**
-    * @brief initializeWidget
-    * @param parameter
-    * @param filter
-    */
-    void initializeWidget(FilterParameter* parameter, AbstractFilter* filter);
-
-    /**
-    * @brief This method updates the Select All checkbox, based on what items are currently
-    * selected in the list.
-    */
-    void updateSelectAllCheckbox();
-
-
   public slots:
     void beforePreflight();
     void afterPreflight();
     void filterNeedsInputParameters(AbstractFilter* filter);
 
-    void on_dataContainerCombo_currentIndexChanged(int index);
-
-    void on_attributeMatrixCombo_currentIndexChanged(int index);
-
-    void on_attributeArraysSelectWidget_itemChanged(QListWidgetItem* item);
+    void widgetChanged(const QString& msg);
+    void on_dataContainerName_returnPressed();
+    void on_applyChangesBtn_clicked();
 
 
-  protected:
-    void populateComboBoxes();
-
-    /**
-    * @brief generateDCAProxy
-    * @return
-    */
-    DataContainerArrayProxy generateDCAProxy();
-
-  protected slots:
-    void on_selectCheckBox_stateChanged(int state);
-    void on_upBtn_pressed();
-    void on_downBtn_pressed();
-
+    void hideButton();
 
   signals:
     void errorSettingFilterParameter(const QString& msg);
@@ -140,16 +100,13 @@ class DREAM3DWidgetsLib_EXPORT MultiDataArraySelectionWidget : public FilterPara
 
     bool m_DidCausePreflight;
 
+    DataContainerCreationFilterParameter*                 m_FilterParameter;
 
-    DataContainerArrayProxy m_DcaProxy;
-
-    MultiDataArraySelectionFilterParameter* m_FilterParameter;
-
-    MultiDataArraySelectionWidget(const MultiDataArraySelectionWidget&); // Copy Constructor Not Implemented
-    void operator=(const MultiDataArraySelectionWidget&); // Operator '=' Not Implemented
+    DataContainerCreationWidget(const DataContainerCreationWidget&); // Copy Constructor Not Implemented
+    void operator=(const DataContainerCreationWidget&); // Operator '=' Not Implemented
 
 };
 
-#endif /* _MultiDataArraySelectionWidget_H_ */
+#endif /* _DataContainerCreationWidget_H_ */
 
 
