@@ -53,13 +53,13 @@ cmake_minimum_required(VERSION 3.1.0)
 #------------------------------------------------------------------------------
 # Create the Top level Project
 #
-project(DREAM3DProj VERSION 6.3.0.0)
+project(DREAM3DProj VERSION 6.2.0.0)
 #------------------------------------------------------------------------------
 # There are several different Release Types that we are going to use.
 # Official: This is an official release from BlueQuartz Software
 # Beta: This is a Beta release that has is getting ready to be officially released.
 # Development: This is currently in development and probably has bugs.
-set(DREAM3DProj_RELEASE_TYPE "Development")
+set(DREAM3DProj_RELEASE_TYPE "Official")
 
 include(CMakeParseArguments)
 
@@ -345,6 +345,14 @@ add_subdirectory(${DREAM3DProj_SOURCE_DIR}/Source/QtSupportLib ${PROJECT_BINARY_
 # The plugins are also going to depend on these being built
 add_subdirectory( ${DREAM3DProj_SOURCE_DIR}/Source/DREAM3DWidgetsLib ${PROJECT_BINARY_DIR}/DREAM3DWidgetsLib)
 
+# --------------------------------------------------------------------
+# Build the SimpleITKExplicit Library.
+option(SIMPLib_USE_ITK "Use ITK For Image Processing" ON)
+if(SIMPLib_USE_ITK)
+  add_subdirectory( ${DREAM3DProj_SOURCE_DIR}/Source/SimpleITKExplicit ${PROJECT_BINARY_DIR}/SimpleITKExplicit)
+  get_property(SimpleITKExplicit_LIB_NAME TARGET SimpleITKExplicit PROPERTY OUTPUT_NAME)
+endif()
+
 #-------------------------------------------------------------------------------
 # Build the DREAM3D Application here so we can add dependencies between the plugin and
 # the main DREAM3D application target. This should ensure that everything is built and
@@ -358,12 +366,6 @@ if(SIMPLib_BUILD_DREAM3D)
   set(SIMPLib_DOCS_ROOT_DIR "${DREAM3DProj_BINARY_DIR}/Bin/Help/DREAM3D")
 endif()
 
-# --------------------------------------------------------------------
-# Build the SimpleITKExplicit Library.
-option(SIMPLib_USE_ITK "Use ITK For Image Processing" ON)
-if(SIMPLib_USE_ITK)
-  add_subdirectory( ${DREAM3DProj_SOURCE_DIR}/Source/SimpleITKExplicit ${PROJECT_BINARY_DIR}/SimpleITKExplicit)
-endif()
 
 #-------------------------------------------------------------------------------
 # Compile the Core Plugins that come with DREAM3D and any other Plugins that the
