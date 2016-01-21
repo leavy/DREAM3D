@@ -43,6 +43,8 @@
 #include <QtCore/QDir>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QMimeData>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
 
 #include <QtGui/QMouseEvent>
 #include <QtGui/QDropEvent>
@@ -877,10 +879,43 @@ void PipelineViewWidget::dragMoveEvent(QDragMoveEvent* event)
       }
     }
   }
-  else if (mimedata->hasText())
+  else if (mimedata->hasUrls() || mimedata->hasFormat(DREAM3D::DragAndDrop::BookmarkItem) || mimedata->hasFormat(DREAM3D::DragAndDrop::FilterItem))
   {
-    QByteArray dropData = mimedata->data("text/plain");
-    QString data(dropData);
+    QString data;
+    if (mimedata->hasUrls())
+    {
+      data = mimedata->text();
+      QUrl url(data);
+      data = url.toLocalFile();
+    }
+    else if (mimedata->hasText())
+    {
+      data = mimedata->text();
+    }
+    else if (mimedata->hasFormat(DREAM3D::DragAndDrop::BookmarkItem))
+    {
+      QByteArray jsonArray = mimedata->data(DREAM3D::DragAndDrop::BookmarkItem);
+      QJsonDocument doc = QJsonDocument::fromJson(jsonArray);
+      QJsonObject obj = doc.object();
+
+      if (obj.size() > 1)
+      {
+        event->accept();
+        return;
+      }
+
+      QJsonObject::iterator iter = obj.begin();
+      data = iter.value().toString();
+    }
+    else
+    {
+      QByteArray jsonArray = mimedata->data(DREAM3D::DragAndDrop::FilterItem);
+      QJsonDocument doc = QJsonDocument::fromJson(jsonArray);
+      QJsonObject obj = doc.object();
+      QJsonObject::iterator iter = obj.begin();
+      data = iter.value().toString();
+    }
+
     QFileInfo fi(data);
     QString ext = fi.completeSuffix();
     FilterManager* fm = FilterManager::Instance();
@@ -982,73 +1017,68 @@ void PipelineViewWidget::dropEvent(QDropEvent* event)
   const QMimeData* mimedata = event->mimeData();
   if (m_CurrentFilterBeingDragged != NULL && event->dropAction() == Qt::MoveAction)
   {
-    // This path is take if a filter is being dragged around in the pipeline and dropped.
+    int index;
+
+    // The drop box, if it exists, marks the index where the filter should be dropped
     if (NULL != m_FilterWidgetLayout && m_FilterWidgetLayout->indexOf(m_DropBox) != -1)
     {
-      m_FilterWidgetLayout->removeWidget(m_DropBox);
-      m_DropBox->setParent(NULL);
+      index = m_FilterWidgetLayout->indexOf(m_DropBox);
+    }
+    else
+    {
+      index = -1;
     }
 
-    int count = filterCount();
-    bool didInsert = false;
-    for (int i = 0; i < count; ++i)
-    {
-      PipelineFilterWidget* w = qobject_cast<PipelineFilterWidget*>(m_FilterWidgetLayout->itemAt(i)->widget());
-      if (w != NULL && m_CurrentFilterBeingDragged != NULL && w != m_CurrentFilterBeingDragged)
-      {
-        if (event->pos().y() < w->geometry().y() + w->geometry().height() / 3)
-        {
-          m_FilterWidgetLayout->insertWidget(i, m_CurrentFilterBeingDragged);
-          setSelectedFilterWidget(m_CurrentFilterBeingDragged);
-          reindexWidgetTitles();
-          didInsert = true;
-          break;
-        }
-      }
-    }
-    // Check to see if we are trying to move it to the end
-    if (false == didInsert && count > 0)
-    {
-      PipelineFilterWidget* w = qobject_cast<PipelineFilterWidget*>(m_FilterWidgetLayout->itemAt(count - 2)->widget());
-      if (w != NULL && m_CurrentFilterBeingDragged != NULL && w != m_CurrentFilterBeingDragged)
-      {
-        if (event->pos().y() > w->geometry().y() + w->geometry().height())
-        {
-          m_FilterWidgetLayout->insertWidget(count - 1, m_CurrentFilterBeingDragged);
-          setSelectedFilterWidget(m_CurrentFilterBeingDragged);
-          reindexWidgetTitles();
-        }
-      }
-    }
-
+    m_FilterWidgetLayout->insertWidget(index, m_CurrentFilterBeingDragged);
     setSelectedFilterWidget(m_CurrentFilterBeingDragged);
     m_CurrentFilterBeingDragged = NULL;
     m_PreviousFilterBeingDragged = NULL;
 
-    // Make sure the widget titles are all correct
-    reindexWidgetTitles();
     preflightPipeline();
 
     emit pipelineChanged();
-    event->acceptProposedAction();
+    event->accept();
   }
-  else if (mimedata->hasUrls() || mimedata->hasText())
+  else if (mimedata->hasUrls() || mimedata->hasText() || mimedata->hasFormat(DREAM3D::DragAndDrop::BookmarkItem) || mimedata->hasFormat(DREAM3D::DragAndDrop::FilterItem))
   {
-    QByteArray dropData = mimedata->data("text/plain");
-    QString data(dropData);
-    QString filePath;
+    QString data;
 
     if (mimedata->hasUrls())
     {
+      data = mimedata->text();
       QUrl url(data);
-      filePath = url.toLocalFile();
+      data = url.toLocalFile();
+    }
+    else if (mimedata->hasText())
+    {
+      data = mimedata->text();
+    }
+    else if (mimedata->hasFormat(DREAM3D::DragAndDrop::FilterItem))
+    {
+      QByteArray jsonArray = mimedata->data(DREAM3D::DragAndDrop::FilterItem);
+      QJsonDocument doc = QJsonDocument::fromJson(jsonArray);
+      QJsonObject obj = doc.object();
+      QJsonObject::iterator iter = obj.begin();
+      data = iter.value().toString();
     }
     else
     {
-      filePath = data;
+      QByteArray jsonArray = mimedata->data(DREAM3D::DragAndDrop::BookmarkItem);
+      QJsonDocument doc = QJsonDocument::fromJson(jsonArray);
+      QJsonObject obj = doc.object();
+
+      if (obj.size() > 1)
+      {
+        QMessageBox::warning(NULL, "DREAM.3D Warning", "DREAM.3D currently does not support dragging and dropping multiple bookmarks.", QMessageBox::Ok);
+        event->ignore();
+        return;
+      }
+
+      QJsonObject::iterator iter = obj.begin();
+      data = iter.value().toString();
     }
 
-    QFileInfo fi(filePath);
+    QFileInfo fi(data);
     QString ext = fi.completeSuffix();
     FilterManager* fm = FilterManager::Instance();
     if (NULL == fm) { return; }
@@ -1057,33 +1087,23 @@ void PipelineViewWidget::dropEvent(QDropEvent* event)
     // If the dragged item is a filter item...
     if (NULL != wf)
     {
-      // Remove the drop line
-      if (NULL != m_FilterWidgetLayout && m_FilterWidgetLayout->indexOf(m_DropBox) != -1)
-      {
-        m_FilterWidgetLayout->removeWidget(m_DropBox);
-        m_DropBox->setParent(NULL);
-      }
+      int index;
 
       // We need to figure out where it was dropped relative to other filters
-      int count = filterCount() - 1;
-      for (int i = 0; i < count; ++i)
+      if (NULL != m_FilterWidgetLayout && m_FilterWidgetLayout->indexOf(m_DropBox) != -1)
       {
-        PipelineFilterWidget* w = qobject_cast<PipelineFilterWidget*>(m_FilterWidgetLayout->itemAt(i)->widget());
-        if (w != NULL)
-        {
-          if (event->pos().y() < w->geometry().y())
-          {
-            count = i;
-            break;
-          }
-        }
+        index = m_FilterWidgetLayout->indexOf(m_DropBox);
+      }
+      else
+      {
+        index = -1;
       }
 
       // Now that we have an index, insert the filter.
-      addFilter(data, count);
+      addFilter(data, index);
 
       emit pipelineChanged();
-      event->acceptProposedAction();
+      event->accept();
     }
     // If the dragged item is a pipeline file...
     else if (ext == "dream3d" || ext == "json" || ext == "ini" || ext == "txt")
@@ -1096,14 +1116,7 @@ void PipelineViewWidget::dropEvent(QDropEvent* event)
 
       if (ext == "json" || ext == "ini" || ext == "txt")
       {
-        // Remove the drop line
-        if (NULL != m_FilterWidgetLayout && index != -1)
-        {
-          m_FilterWidgetLayout->removeWidget(m_DropBox);
-          m_DropBox->setParent(NULL);
-        }
-
-        openPipeline(filePath, index, false, false);
+        openPipeline(data, index, false, false);
 
         emit pipelineChanged();
       }
@@ -1113,27 +1126,20 @@ void PipelineViewWidget::dropEvent(QDropEvent* event)
         msgBox->exec();
         msgBox->deleteLater();
 
-        // Remove the drop line
-        if (NULL != m_FilterWidgetLayout && index != -1)
-        {
-          m_FilterWidgetLayout->removeWidget(m_DropBox);
-          m_DropBox->setParent(NULL);
-        }
-
         if (msgBox->didPressOkBtn() == true)
         {
           if (msgBox->isExtractPipelineBtnChecked() == true)
           {
-            openPipeline(filePath, index, false, false);
+            openPipeline(data, index, false, false);
           }
           else
           {
-            addDREAM3DReaderFilter(filePath, index);
+            addDREAM3DReaderFilter(data, index);
             emit pipelineChanged();
           }
         }
       }
-      event->acceptProposedAction();
+      event->accept();
     }
     else
     {
@@ -1143,6 +1149,14 @@ void PipelineViewWidget::dropEvent(QDropEvent* event)
 
   // Stop auto scrolling if widget is dropped
   stopAutoScroll();
+
+  // Remove the drop line, if it exists
+  if (NULL != m_FilterWidgetLayout && m_FilterWidgetLayout->indexOf(m_DropBox) != -1)
+  {
+    m_FilterWidgetLayout->removeWidget(m_DropBox);
+    m_DropBox->setParent(NULL);
+    reindexWidgetTitles();
+  }
 }
 
 // -----------------------------------------------------------------------------
