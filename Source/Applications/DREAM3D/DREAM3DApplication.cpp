@@ -101,6 +101,9 @@ DREAM3DApplication::~DREAM3DApplication()
   delete this->Splash;
   this->Splash = NULL;
 
+  DREAM3DUserManualDialog* ptr = DREAM3DUserManualDialog::Instance();
+  delete ptr;
+
   DREAM3DToolbox* toolbox = DREAM3DToolbox::Instance();
   toolbox->writeSettings();
 
@@ -372,6 +375,11 @@ bool DREAM3DApplication::event(QEvent* event)
     newInstanceFromFile(filePath, true, true);
 
     return true;
+  }
+  else if (event->type() == QEvent::Close)
+  {
+    // We are already handling this event, so don't pass it on
+    return false;
   }
 
   return QApplication::event(event);
