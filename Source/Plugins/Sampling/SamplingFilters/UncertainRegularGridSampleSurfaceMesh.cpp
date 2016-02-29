@@ -193,7 +193,7 @@ void UncertainRegularGridSampleSurfaceMesh::preflight()
 // -----------------------------------------------------------------------------
 VertexGeom::Pointer UncertainRegularGridSampleSurfaceMesh::generate_points()
 {
-  VertexGeom::Pointer points = VertexGeom::CreateGeometry((m_XPoints * m_YPoints * m_ZPoints), "points");
+  VertexGeom::Pointer points = VertexGeom::CreateGeometry((m_XPoints * m_YPoints * m_ZPoints), "Points");
 
   SIMPL_RANDOMNG_NEW()
 
