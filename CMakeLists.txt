@@ -283,9 +283,9 @@ endif(BUILD_SHARED_LIBS)
 # Find and Use the Qt5 Libraries
 include(${CMP_SOURCE_DIR}/ExtLib/Qt5Support.cmake)
 set(DREAM3D_Qt5_Components Core Widgets Network Gui Concurrent Script Svg Xml OpenGL PrintSupport )
-option(DREAM3D_USE_QtWebEngine "Use QWebEngine to display Help. OFF=Use default web browser" ON)
+option(SIMPLView_USE_QtWebEngine "Use QWebEngine to display Help. OFF=Use default web browser" ON)
 CMP_AddQt5Support( "${DREAM3D_Qt5_Components}"
-                    "${DREAM3D_USE_QtWebEngine}"
+                    "${SIMPLView_USE_QtWebEngine}"
                     "${DREAM3DProj_BINARY_DIR}"
                     "DREAM3D")
 
@@ -459,11 +459,6 @@ set(DREAM3D_DOCS_ROOT_DIR "${DREAM3DProj_BINARY_DIR}/Bin/Help/DREAM3D")
 # Compile the Core Plugins that come with DREAM3D and any other Plugins that the
 # developer has added.
 include(${PROJECT_CODE_DIR}/Plugins/Plugins.cmake)
-
-#-------------------------------------------------------------------------------
-# Compile StatsGenerator
-add_subdirectory(${DREAM3DProj_SOURCE_DIR}/Source/Applications/StatsGenerator ${PROJECT_BINARY_DIR}/Applications/StatsGenerator)
-
 
 # add the Command line utilities
 # Figure out here if we are going to build the command line tools
