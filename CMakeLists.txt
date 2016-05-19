@@ -300,7 +300,6 @@ include(${CMP_SOURCE_DIR}/ExtLib/HDF5Support.cmake)
 #set(Boost_FIND_REQUIRED FALSE)
 set(Boost_DEBUG FALSE)
 set(Boost_USE_MULTITHREADED TRUE)
-set(Boost_USE_STATIC_LIBS TRUE)
 set(Boost_ADDITIONAL_VERSIONS 1.57)
 set(Boost_FIND_COMPONENTS "")
 set(Boost_NO_BOOST_CMAKE 1)
@@ -565,3 +564,17 @@ if(EXISTS ${data_file})
           DESTINATION ./Data/
           COMPONENT Applications )
 endif()
+
+#-- This is example code that loops over all the DocGroups and each .md BUILD_WITH_INSTALL_RPATH
+#-- the filter DocGroup
+if (0)
+get_property(DREAM3DDoc_GROUPS GLOBAL PROPERTY DREAM3DDoc_GROUPS)
+foreach(DocGroup ${DREAM3DDoc_GROUPS})
+  #message(STATUS "  DocGroup: ${DocGroup}" )
+  get_property(DocGroupList GLOBAL PROPERTY DREAM3DDoc_${DocGroup})
+  foreach(docListItem ${DocGroupList})
+    #message(STATUS "    ${docListItem}")
+  endforeach()
+endforeach()
+endif()
+
