@@ -150,7 +150,7 @@ endif()
 # Official: This is an official release from BlueQuartz Software
 # Beta: This is a Beta release that has is getting ready to be officially released.
 # Development: This is currently in development and probably has bugs.
-set(DREAM3DProj_RELEASE_TYPE "Development")
+set(DREAM3DProj_RELEASE_TYPE "Beta")
 
 include(CMakeParseArguments)
 
@@ -358,12 +358,6 @@ else()
   message(FATAL_ERROR "Doxygen is needed to build the documentation. Please install it correctly")
 endif()
 
-
-# ------------------------------------------------------------------------------
-#  Qwt Section. Find Qwt and setup copy and install rules
-# ------------------------------------------------------------------------------
-include(${CMP_SOURCE_DIR}/ExtLib/QwtSupport.cmake)
-
 # --------------------------------------------------------------------
 # Now that we have found all of our required libraries and packages we can start the all
 # the tests
@@ -375,12 +369,13 @@ set(DREAM3DProj_INSTALL_FILES "${PROJECT_INSTALL_HEADERS}")
 # Generate our ReadMe and License Files
 configure_file(${PROJECT_RESOURCES_DIR}/DREAM3D/DREAM3DLicense.txt
                 ${PROJECT_BINARY_DIR}/DREAM3D/DREAM3DLicense.txt )
-configure_file(${PROJECT_SOURCE_DIR}/ReadMe.md
-                ${PROJECT_BINARY_DIR}/ReadMe.md )
+configure_file(${PROJECT_SOURCE_DIR}/ReadMe-DREAM3D.md
+                ${PROJECT_BINARY_DIR}/ReadMe-DREAM3D.md )
 
 # --------------------------------------------------------------------
 # Generate install rules for the text files
-install(FILES ${PROJECT_BINARY_DIR}/ReadMe.md
+install(FILES ${PROJECT_BINARY_DIR}/ReadMe-DREAM3D.md
+              ${PROJECT_BINARY_DIR}/DREAM3D/DREAM3DLicense.txt
         DESTINATION .
         COMPONENT Applications)
 
@@ -465,7 +460,6 @@ include(${PROJECT_CODE_DIR}/Plugins/Plugins.cmake)
 option(SIMPLib_BUILD_CLI_TOOLS "Build the command line versions of the applications" ON)
 if( SIMPLib_BUILD_CLI_TOOLS )
     add_subdirectory(${DREAM3DProj_SOURCE_DIR}/Tools ${PROJECT_BINARY_DIR}/Tools)
-    add_subdirectory(${DREAM3DProj_SOURCE_DIR}/Tools/astyle ${PROJECT_BINARY_DIR}/Tools/astyle)
 endif()
 
 
