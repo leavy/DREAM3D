@@ -96,7 +96,7 @@ class ImportASCIIDataTest
       QString filtName = "ImportASCIIData";
       FilterManager* fm = FilterManager::Instance();
       IFilterFactory::Pointer filterFactory = fm->getFactoryForFilter(filtName);
-      if (NULL == filterFactory.get())
+      if (nullptr == filterFactory.get())
       {
         std::stringstream ss;
         ss << "The ImportASCIIDataTest Requires the use of the " << filtName.toStdString() << " filter which is found in the IO Plugin";
@@ -143,7 +143,7 @@ class ImportASCIIDataTest
       QString filtName = "ImportASCIIData";
       FilterManager* fm = FilterManager::Instance();
       IFilterFactory::Pointer filterFactory = fm->getFactoryForFilter(filtName);
-      if (NULL != filterFactory.get())
+      if (nullptr != filterFactory.get())
       {
         // If we get this far, the Factory is good so creating the filter should not fail unless something has
         // horribly gone wrong in which case the system is going to come down quickly after this.
@@ -200,7 +200,7 @@ class ImportASCIIDataTest
         CreateFile(UnitTest::ImportASCIIDataTest::TestFile1, inputDoubleVector, delimiter);
 
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -233,7 +233,7 @@ class ImportASCIIDataTest
         CreateFile(UnitTest::ImportASCIIDataTest::TestFile1, inputIntVector, delimiter);
 
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -265,7 +265,7 @@ class ImportASCIIDataTest
         CreateFile(UnitTest::ImportASCIIDataTest::TestFile1, inputCharErrorVector, delimiter);
 
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -280,7 +280,7 @@ class ImportASCIIDataTest
         CreateFile(UnitTest::ImportASCIIDataTest::TestFile1, inputScientificNotation, delimiter);
 
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -314,7 +314,7 @@ class ImportASCIIDataTest
         CreateFile(UnitTest::ImportASCIIDataTest::TestFile1, inputHexVector, delimiter);
 
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -342,7 +342,7 @@ class ImportASCIIDataTest
         data.numberOfLines = 7;
         data.tupleDims = QVector<size_t>(1, 7);
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -370,7 +370,7 @@ class ImportASCIIDataTest
         data.numberOfLines = 1;
         data.tupleDims = QVector<size_t>(1, 1);
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();
@@ -406,7 +406,7 @@ class ImportASCIIDataTest
         data.numberOfLines = 1;
         data.tupleDims = QVector<size_t>(1, 1);
         AbstractFilter::Pointer importASCIIData = PrepFilter(data);
-        DREAM3D_REQUIRE_NE(importASCIIData.get(), NULL)
+        DREAM3D_REQUIRE_VALID_POINTER(importASCIIData.get())
 
             importASCIIData->execute();
         int err = importASCIIData->getErrorCondition();

@@ -98,8 +98,6 @@ PrecipitatePhaseWidget::~PrecipitatePhaseWidget()
 // -----------------------------------------------------------------------------
 void PrecipitatePhaseWidget::setupGui()
 {
-  qDebug() << "PrecipitatePhaseWidget::setupGui()";
-
   QLocale loc = QLocale::system();
 
   getMicrostructurePresetCombo()->blockSignals(true);
@@ -224,10 +222,10 @@ void PrecipitatePhaseWidget::setupGui()
   getTabWidget()->addTab(rdfTab, m_RdfPlot->getTabTitle());
 
   connect(m_RdfPlot, SIGNAL(rdfParametersChanged()),
-          this, SIGNAL(phaseParametersChanged()));
+          this, SIGNAL(dataChanged()));
 
-  connect(getFeatureSizeWidget(), SIGNAL(phaseParametersChanged()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(getFeatureSizeWidget(), SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
 
   connect(getFeatureSizeWidget(), SIGNAL(userEnteredValidData(bool)),
           getGenerateDefaultDataBtn(), SLOT(setEnabled(bool)));
@@ -338,7 +336,7 @@ void PrecipitatePhaseWidget::on_m_GenerateDefaultData_clicked()
 {
   setDataHasBeenGenerated(true);
   updatePlots();
-  emit phaseParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -393,7 +391,7 @@ int PrecipitatePhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bo
   phaseTypes[getPhaseIndex()] = getPhaseType();
 
   StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics).get());
-  if (NULL != statsDataArray)
+  if (nullptr != statsDataArray)
   {
     StatsData::Pointer statsData = statsDataArray->getStatsData(getPhaseIndex());
     PrecipitateStatsData* precipitateStatsData = PrecipitateStatsData::SafePointerDownCast(statsData.get());
@@ -464,7 +462,7 @@ void PrecipitatePhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, 
 
   iDataArray = attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics);
   StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(iDataArray.get());
-  if (statsDataArray == NULL)
+  if (statsDataArray == nullptr)
   {
     return;
   }

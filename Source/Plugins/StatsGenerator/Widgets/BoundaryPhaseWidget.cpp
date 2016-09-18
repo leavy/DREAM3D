@@ -67,7 +67,7 @@
 // -----------------------------------------------------------------------------
 BoundaryPhaseWidget::BoundaryPhaseWidget(QWidget* parent) :
   SGWidget(parent),
-  m_grid(NULL)
+  m_grid(nullptr)
 {
   setTabTitle("Boundary");
   setPhaseType(SIMPL::PhaseType::PrimaryPhase);
@@ -110,7 +110,7 @@ int BoundaryPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool 
   int retErr = 0;
   float calcPhaseFraction = getPhaseFraction() / getTotalPhaseFraction();
 
-  //size_t ensembles = attrMat->getNumTuples();
+  //size_t ensembles = attrMat->getNumberOfTuples();
 
   // Get pointers
   IDataArray::Pointer iDataArray = attrMat->getAttributeArray(SIMPL::EnsembleData::CrystalStructures);
@@ -122,7 +122,7 @@ int BoundaryPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool 
   phaseTypes[getPhaseIndex()] = getPhaseType();
 
   StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics).get());
-  if (NULL != statsDataArray)
+  if (nullptr != statsDataArray)
   {
     StatsData::Pointer statsData = statsDataArray->getStatsData(getPhaseIndex());
     BoundaryStatsData* boundaryStatsData = BoundaryStatsData::SafePointerDownCast(statsData.get());
@@ -151,7 +151,7 @@ void BoundaryPhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, int
 
   iDataArray = attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics);
   StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(iDataArray.get());
-  if (statsDataArray == NULL)
+  if (statsDataArray == nullptr)
   {
     return;
   }

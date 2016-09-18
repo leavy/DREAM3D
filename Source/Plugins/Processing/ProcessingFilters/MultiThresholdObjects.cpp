@@ -57,7 +57,7 @@ MultiThresholdObjects::MultiThresholdObjects() :
   AbstractFilter(),
   m_DestinationArrayName(SIMPL::GeneralData::Mask),
   m_SelectedThresholds(),
-  m_Destination(NULL)
+  m_Destination(nullptr)
 {
   setupFilterParameters();
 }
@@ -153,7 +153,7 @@ void MultiThresholdObjects::dataCheck()
     QVector<size_t> cDims(1, 1);
     DataArrayPath tempPath(comp.dataContainerName, comp.attributeMatrixName, getDestinationArrayName());
     m_DestinationPtr = getDataContainerArray()->createNonPrereqArrayFromPath<DataArray<bool>, AbstractFilter, bool>(this, tempPath, true, cDims); /* Assigns the shared_ptr<> to an instance variable that is a weak_ptr<> */
-    if( NULL != m_DestinationPtr.lock().get() ) /* Validate the Weak Pointer wraps a non-NULL pointer to a DataArray<T> object */
+    if( nullptr != m_DestinationPtr.lock().get() ) /* Validate the Weak Pointer wraps a non-nullptr pointer to a DataArray<T> object */
     { m_Destination = m_DestinationPtr.lock()->getPointer(0); } /* Now assign the raw pointer to data from the DataArray<T> object */
 
     // Do not allow non-scalar arrays
@@ -231,7 +231,7 @@ void MultiThresholdObjects::execute()
   if (m_SelectedThresholds.size() > 1)
   {
     // Get the total number of tuples, create and initialize an array to use for these results
-    int64_t totalTuples = static_cast<int64_t>(m->getAttributeMatrix(amName)->getNumTuples());
+    int64_t totalTuples = static_cast<int64_t>(m->getAttributeMatrix(amName)->getNumberOfTuples());
     BoolArrayType::Pointer currentArrayPtr = BoolArrayType::CreateArray(totalTuples, "_INTERNAL_USE_ONLY_TEMP");
 
     // Loop on the remaining Comparison objects updating our final result array as we go

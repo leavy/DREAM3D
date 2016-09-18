@@ -168,7 +168,7 @@ void VtkStructuredPointsReader::dataCheck()
   // Create a Vertex Data Container even though we may remove it later. We need it later
   // on in order to set the proper AttributeMatrix
   DataContainer::Pointer pointData_DataContainer = getDataContainerArray()->createNonPrereqDataContainer<AbstractFilter>(this, getVertexDataContainerName());
-  if(getErrorCondition() < 0 && NULL == pointData_DataContainer) { return; }
+  if(getErrorCondition() < 0 && nullptr == pointData_DataContainer) { return; }
 
   ImageGeom::Pointer pointDataGeom = ImageGeom::CreateGeometry(getVertexDataContainerName());
   pointData_DataContainer->setGeometry(pointDataGeom);
@@ -180,7 +180,7 @@ void VtkStructuredPointsReader::dataCheck()
   // Create a Volume Data Container even though we may remove it later. We need it later
   // on in order to set the proper AttributeMatrix
   DataContainer::Pointer cellData_DataContainer = getDataContainerArray()->createNonPrereqDataContainer<AbstractFilter>(this, getVolumeDataContainerName());
-  if(getErrorCondition() < 0 && NULL == cellData_DataContainer) { return; }
+  if(getErrorCondition() < 0 && nullptr == cellData_DataContainer) { return; }
 
   ImageGeom::Pointer cellDataGeom = ImageGeom::CreateGeometry(getVolumeDataContainerName());
   cellData_DataContainer->setGeometry(cellDataGeom);
@@ -374,7 +374,7 @@ template<typename T>
 int32_t readDataChunk(AttributeMatrix::Pointer attrMat, std::istream& in, bool inPreflight, bool binary,
                       const QString& scalarName, int32_t scalarNumComp)
 {
-  size_t numTuples = attrMat->getNumTuples();
+  size_t numTuples = attrMat->getNumberOfTuples();
 
   QVector<size_t> tDims = attrMat->getTupleDimensions();
   QVector<size_t> cDims(1, scalarNumComp);
@@ -588,7 +588,7 @@ int32_t VtkStructuredPointsReader:: readFile()
     DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getVolumeDataContainerName());
     m_CurrentAttrMat = m->getAttributeMatrix(getCellAttributeMatrixName());
     ncells = tokens[1].toInt(&ok);
-    if (m_CurrentAttrMat->getNumTuples() != ncells)
+    if (m_CurrentAttrMat->getNumberOfTuples() != ncells)
     {
       setErrorCondition(-61006);
       notifyErrorMessage(getHumanLabel(), QString("Number of cells does not match number of tuples in the Attribute Matrix"), getErrorCondition());
@@ -601,7 +601,7 @@ int32_t VtkStructuredPointsReader:: readFile()
     DataContainer::Pointer m = getDataContainerArray()->getDataContainer(getVertexDataContainerName());
     m_CurrentAttrMat = m->getAttributeMatrix(getVertexAttributeMatrixName());
     npts = tokens[1].toInt(&ok);
-    if (m_CurrentAttrMat->getNumTuples() != npts)
+    if (m_CurrentAttrMat->getNumberOfTuples() != npts)
     {
       setErrorCondition(-61007);
       notifyErrorMessage(getHumanLabel(), QString("Number of points does not match number of tuples in the Attribute Matrix"), getErrorCondition());
@@ -933,14 +933,14 @@ int32_t VtkStructuredPointsReader::readVectorData(std::istream& in, int32_t numP
   // See whether vector has been already read or vector name (if specified)
   // matches name in file.
   //
-  if ( a->GetVectors() != NULL || (this->VectorsName && strcmp(name, this->VectorsName)) )
+  if ( a->GetVectors() != nullptr || (this->VectorsName && strcmp(name, this->VectorsName)) )
   {
     skipVector = 1;
   }
 
   data = vtkDataArray::SafeDownCast(
            this->ReadArray(line, numPts, 3));
-  if ( data != NULL )
+  if ( data != nullptr )
   {
     data->SetName(name);
     if ( ! skipVector )

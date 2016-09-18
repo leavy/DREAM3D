@@ -293,10 +293,10 @@ void PrimaryPhaseWidget::setupGui()
   w->setMinCutOff(minCutOff);
   w->setMaxCutOff(maxCutOff);
   w->setBinStep(binStepSize);
-  connect(w, SIGNAL(userEditedData()),
+  connect(w, SIGNAL(dataChanged()),
           this, SLOT(dataWasEdited()));
-  connect(w, SIGNAL(userEditedData()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(w, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
   connect(m_FeatureSizeDistWidget, SIGNAL(binSelected(int)),
           w, SLOT(highlightCurve(int)));
 
@@ -315,10 +315,10 @@ void PrimaryPhaseWidget::setupGui()
   w->setMinCutOff(minCutOff);
   w->setMaxCutOff(maxCutOff);
   w->setBinStep(binStepSize);
-  connect(w, SIGNAL(userEditedData()),
+  connect(w, SIGNAL(dataChanged()),
           this, SLOT(dataWasEdited()));
-  connect(w, SIGNAL(userEditedData()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(w, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
   connect(m_FeatureSizeDistWidget, SIGNAL(binSelected(int)),
           w, SLOT(highlightCurve(int)));
 
@@ -337,10 +337,10 @@ void PrimaryPhaseWidget::setupGui()
   w->setMinCutOff(minCutOff);
   w->setMaxCutOff(maxCutOff);
   w->setBinStep(binStepSize);
-  connect(w, SIGNAL(userEditedData()),
+  connect(w, SIGNAL(dataChanged()),
           this, SLOT(dataWasEdited()));
-  connect(w, SIGNAL(userEditedData()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(w, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
   connect(m_FeatureSizeDistWidget, SIGNAL(binSelected(int)),
           w, SLOT(highlightCurve(int)));
 
@@ -359,10 +359,10 @@ void PrimaryPhaseWidget::setupGui()
   w->setMinCutOff(minCutOff);
   w->setMaxCutOff(maxCutOff);
   w->setBinStep(binStepSize);
-  connect(w, SIGNAL(userEditedData()),
+  connect(w, SIGNAL(dataChanged()),
           this, SLOT(dataWasEdited()));
-  connect(w, SIGNAL(userEditedData()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(w, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
   connect(m_FeatureSizeDistWidget, SIGNAL(binSelected(int)),
           w, SLOT(highlightCurve(int)));
 
@@ -378,15 +378,15 @@ void PrimaryPhaseWidget::setupGui()
   // Remove any Axis Decorations. The plots are explicitly know to have a -1 to 1 axis min/max
   m_AxisODFWidget->setEnableAxisDecorations(false);
 
-  connect(m_ODFWidget, SIGNAL(odfParametersChanged()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(m_ODFWidget, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
   connect(m_ODFWidget, SIGNAL(bulkLoadEvent(bool)),
           this, SLOT(bulkLoadEvent(bool)));
-  connect(m_AxisODFWidget, SIGNAL(axisODFParametersChanged()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(m_AxisODFWidget, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
 
-  connect(m_FeatureSizeDistWidget, SIGNAL(phaseParametersChanged()),
-          this, SIGNAL(phaseParametersChanged()));
+  connect(m_FeatureSizeDistWidget, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
 
   connect(m_FeatureSizeDistWidget, SIGNAL(userEnteredValidData(bool)),
           m_GenerateDefaultData, SLOT(setEnabled(bool)));
@@ -548,7 +548,7 @@ void PrimaryPhaseWidget::on_m_GenerateDefaultData_clicked()
 {
   setDataHasBeenGenerated(true);
   updatePlots();
-  emit phaseParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -588,7 +588,7 @@ int PrimaryPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool p
   strArray->setValue(getPhaseIndex(), getPhaseName());
 
   StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics).get());
-  if (NULL != statsDataArray)
+  if (nullptr != statsDataArray)
   {
     StatsData::Pointer statsData = statsDataArray->getStatsData(getPhaseIndex());
     PrimaryStatsData* primaryStatsData = PrimaryStatsData::SafePointerDownCast(statsData.get());
@@ -647,7 +647,7 @@ void PrimaryPhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, int 
 
   iDataArray = attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics);
   StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(iDataArray.get());
-  if (statsDataArray == NULL)
+  if (statsDataArray == nullptr)
   {
     return;
   }

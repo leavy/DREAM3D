@@ -93,8 +93,8 @@ StatsGenODFWidget::StatsGenODFWidget(QWidget* parent) :
   m_Initializing(true),
   m_PhaseIndex(-1),
   m_CrystalStructure(Ebsd::CrystalStructure::Cubic_High),
-  m_ODFTableModel(NULL),
-  m_MDFWidget(NULL)
+  m_ODFTableModel(nullptr),
+  m_MDFWidget(nullptr)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   this->setupUi(this);
@@ -107,7 +107,7 @@ StatsGenODFWidget::StatsGenODFWidget(QWidget* parent) :
 // -----------------------------------------------------------------------------
 StatsGenODFWidget::~StatsGenODFWidget()
 {
-  if (NULL != m_ODFTableModel)
+  if (nullptr != m_ODFTableModel)
   {
     m_ODFTableModel->deleteLater();
   }
@@ -166,7 +166,7 @@ void StatsGenODFWidget::extractStatsData(int index, StatsData* statsData, unsign
     }
   }
   // Write the MDF Data if we have that functionality enabled
-  if (m_MDFWidget != NULL)
+  if (m_MDFWidget != nullptr)
   {
     m_MDFWidget->extractStatsData(index, statsData, phaseType);
   }
@@ -186,7 +186,7 @@ int StatsGenODFWidget::getOrientationData(StatsData* statsData, unsigned int pha
   QVector<float> weights;
   QVector<float> sigmas;
 
-  SGODFTableModel* tableModel = NULL;
+  SGODFTableModel* tableModel = nullptr;
 
   if (weightSpreadGroupBox->isChecked() )
   {
@@ -214,7 +214,7 @@ int StatsGenODFWidget::getOrientationData(StatsData* statsData, unsigned int pha
   StatsGeneratorUtilities::GenerateODFBinData(statsData, phaseType, m_CrystalStructure, e1s, e2s, e3s, weights, sigmas, !preflight);
 
   // Write the MDF Data if we have that functionality enabled
-  if (m_MDFWidget != NULL)
+  if (m_MDFWidget != nullptr)
   {
     m_MDFWidget->getMisorientationData(statsData, phaseType, !preflight);
   }
@@ -226,15 +226,15 @@ int StatsGenODFWidget::getOrientationData(StatsData* statsData, unsigned int pha
 // -----------------------------------------------------------------------------
 void StatsGenODFWidget::enableMDFTab(bool b)
 {
-  if (NULL != m_MDFWidget)
+  if (nullptr != m_MDFWidget)
   {
     m_MDFWidget->deleteLater();
   }
   m_MDFWidget = new StatsGenMDFWidget();
   m_MDFWidget->setODFTableModel(m_ODFTableModel);
   tabWidget->addTab(m_MDFWidget, QString("MDF"));
-  connect(m_MDFWidget, SIGNAL(mdfParametersChanged()),
-          this, SIGNAL(odfParametersChanged()));
+  connect(m_MDFWidget, SIGNAL(dataChanged()),
+          this, SIGNAL(dataChanged()));
 }
 
 // -----------------------------------------------------------------------------
@@ -245,7 +245,7 @@ void StatsGenODFWidget::setCrystalStructure(unsigned int value)
   if (m_CrystalStructure != value)
   {
     this->m_CrystalStructure = value;
-    if (m_MDFWidget != NULL)
+    if (m_MDFWidget != nullptr)
     {
       m_MDFWidget->setCrystalStructure(m_CrystalStructure);
     }
@@ -270,7 +270,7 @@ unsigned int StatsGenODFWidget::getCrystalStructure()
 void StatsGenODFWidget::setPhaseIndex(int value)
 {
   this->m_PhaseIndex = value;
-  if (m_MDFWidget != NULL)
+  if (m_MDFWidget != nullptr)
   {
     m_MDFWidget->setPhaseIndex(m_PhaseIndex);
   }
@@ -453,7 +453,7 @@ void StatsGenODFWidget::on_m_CalculateODFBtn_clicked()
   QwtArray<float> weights;
   QwtArray<float> sigmas;
   QwtArray<float> odf;
-  SGODFTableModel* tableModel = NULL;
+  SGODFTableModel* tableModel = nullptr;
 
   int npoints = 0;
   if (weightSpreadGroupBox->isChecked() )
@@ -556,13 +556,13 @@ void StatsGenODFWidget::on_m_CalculateODFBtn_clicked()
   m_PoleFigureLabel->setPixmap(QPixmap::fromImage(image));
 
   // Enable the MDF tab
-  if (m_MDFWidget != NULL)
+  if (m_MDFWidget != nullptr)
   {
     m_MDFWidget->setEnabled(true);
     m_MDFWidget->updateMDFPlot(odf);
   }
 
-  emit odfParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -570,7 +570,7 @@ void StatsGenODFWidget::on_m_CalculateODFBtn_clicked()
 // -----------------------------------------------------------------------------
 void StatsGenODFWidget::on_addODFTextureBtn_clicked()
 {
-  TextureDialog t(m_CrystalStructure, NULL);
+  TextureDialog t(m_CrystalStructure, nullptr);
   int r = t.exec();
   if (r == QDialog::Accepted)
   {
@@ -592,7 +592,7 @@ void StatsGenODFWidget::on_addODFTextureBtn_clicked()
     QModelIndex index = m_ODFTableModel->index(m_ODFTableModel->rowCount() - 1, 0);
     m_ODFTableView->setCurrentIndex(index);
   }
-  emit odfParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -613,13 +613,13 @@ void StatsGenODFWidget::on_angleFilePath_textChanged()
   // If the text has changed, we don't know if the file exists/is valid,
   // so blow away the bulk table model, if it exists, and emit that
   // the user needs to select a valid file and reload
-  if (m_OdfBulkTableModel) { delete m_OdfBulkTableModel; m_OdfBulkTableModel = NULL; }
+  if (m_OdfBulkTableModel) { delete m_OdfBulkTableModel; m_OdfBulkTableModel = nullptr; }
   m_OdfBulkTableModel = new SGODFTableModel;
   m_OdfBulkTableModel->setCrystalStructure(m_CrystalStructure);
   m_OdfBulkTableModel->setInitialValues();
 
   emit bulkLoadEvent(true);
-  emit odfParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -842,7 +842,7 @@ void StatsGenODFWidget::on_loadODFTextureBtn_clicked()
 
   // Just blow away our table and create a new one. Quicker than removing all the rows
   // first, the repopulating them
-  if (m_OdfBulkTableModel) { delete m_OdfBulkTableModel; m_OdfBulkTableModel = NULL; }
+  if (m_OdfBulkTableModel) { delete m_OdfBulkTableModel; m_OdfBulkTableModel = nullptr; }
   m_OdfBulkTableModel = new SGODFTableModel;
   m_OdfBulkTableModel->setCrystalStructure(m_CrystalStructure);
   m_OdfBulkTableModel->setInitialValues();
@@ -876,7 +876,7 @@ void StatsGenODFWidget::on_deleteODFTextureBtn_clicked()
   {
     m_ODFTableView->resizeColumnsToContents();
   }
-  emit odfParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -905,7 +905,7 @@ void StatsGenODFWidget::on_bulkLoadGroupBox_clicked ( bool checked )
   QAbstractItemDelegate* idelegate = m_OdfBulkTableModel->getItemDelegate();
   m_ODFTableView->setItemDelegate(idelegate);
   emit bulkLoadEvent(!(m_OdfBulkTableModel->rowCount() > 0));
-  emit odfParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
@@ -918,7 +918,7 @@ void StatsGenODFWidget::on_weightSpreadGroupBox_clicked ( bool checked )
   QAbstractItemDelegate* idelegate = m_ODFTableModel->getItemDelegate();
   m_ODFTableView->setItemDelegate(idelegate);
   emit bulkLoadEvent(false);
-  emit odfParametersChanged();
+  emit dataChanged();
 }
 
 // -----------------------------------------------------------------------------
