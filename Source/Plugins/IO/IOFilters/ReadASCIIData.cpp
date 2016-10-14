@@ -2,7 +2,7 @@
  * Your License or Copyright can go here
  */
 
-#include "ImportASCIIData.h"
+#include "ReadASCIIData.h"
 
 #include <QtCore/QFileInfo>
 
@@ -10,7 +10,7 @@
 #include "SIMPLib/FilterParameters/AbstractFilterParametersReader.h"
 #include "SIMPLib/FilterParameters/AttributeMatrixSelectionFilterParameter.h"
 
-#include "FilterParameters/ImportASCIIDataFilterParameter.h"
+#include "FilterParameters/ReadASCIIDataFilterParameter.h"
 
 #include "IO/IOConstants.h"
 #include "IO/IOVersion.h"
@@ -19,12 +19,12 @@
 #include "Widgets/ImportASCIIDataWizard/ImportASCIIDataWizard.h"
 
 // Include the MOC generated file for this class
-#include "moc_ImportASCIIData.cpp"
+#include "moc_ReadASCIIData.cpp"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ImportASCIIData::ImportASCIIData()
+ReadASCIIData::ReadASCIIData()
 : AbstractFilter()
 {
   setupFilterParameters();
@@ -33,23 +33,18 @@ ImportASCIIData::ImportASCIIData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ImportASCIIData::~ImportASCIIData()
+ReadASCIIData::~ReadASCIIData()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::setupFilterParameters()
+void ReadASCIIData::setupFilterParameters()
 {
   FilterParameterVector parameters;
 
-  parameters.push_back(ImportASCIIDataFilterParameter::New("ASCII Wizard Data", "WizardData", "", FilterParameter::Parameter));
-
-  {
-    AttributeMatrixSelectionFilterParameter::RequirementType req;
-    parameters.push_back(SIMPL_NEW_AM_SELECTION_FP("Attribute Matrix", AttributeMatrixPath, FilterParameter::Parameter, ImportASCIIData, req));
-  }
+  parameters.push_back(ReadASCIIDataFilterParameter::New("ASCII Wizard Data", "WizardData", "", FilterParameter::Parameter));
 
   setFilterParameters(parameters);
 }
@@ -57,7 +52,7 @@ void ImportASCIIData::setupFilterParameters()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::readFilterParameters(AbstractFilterParametersReader* reader, int index)
+void ReadASCIIData::readFilterParameters(AbstractFilterParametersReader* reader, int index)
 {
   reader->openFilterGroup(this, index);
 
@@ -90,7 +85,6 @@ void ImportASCIIData::readFilterParameters(AbstractFilterParametersReader* reade
   data.tupleDims = tDims;
 
   setWizardData(data);
-  setAttributeMatrixPath(reader->readDataArrayPath("AttributeMatrixPath", getAttributeMatrixPath()));
 
   reader->closeFilterGroup();
 }
@@ -98,7 +92,7 @@ void ImportASCIIData::readFilterParameters(AbstractFilterParametersReader* reade
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::readFilterParameters(QJsonObject& obj)
+void ReadASCIIData::readFilterParameters(QJsonObject& obj)
 {
   AbstractFilter::readFilterParameters(obj);
 
@@ -108,6 +102,12 @@ void ImportASCIIData::readFilterParameters(QJsonObject& obj)
   m_WizardData.consecutiveDelimiters = static_cast<bool>(obj[prefix + "ConsecutiveDelimiters"].toInt());
   m_WizardData.inputFilePath = obj[prefix + "InputFilePath"].toString();
   m_WizardData.numberOfLines = obj[prefix + "NumberOfLines"].toInt();
+  m_WizardData.automaticAM = obj[prefix + "AutomaticAM"].toBool();
+
+  DataArrayPath dap;
+  QJsonObject dapObj = obj[prefix + "SelectedPath"].toObject();
+  dap.readJson(dapObj);
+  m_WizardData.selectedPath = dap;
 
   {
     QJsonArray jsonArray = obj[prefix + "DataHeaders"].toArray();
@@ -156,7 +156,7 @@ void ImportASCIIData::readFilterParameters(QJsonObject& obj)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::writeFilterParameters(QJsonObject& obj)
+void ReadASCIIData::writeFilterParameters(QJsonObject& obj)
 {
   AbstractFilter::writeFilterParameters(obj);
 
@@ -166,6 +166,11 @@ void ImportASCIIData::writeFilterParameters(QJsonObject& obj)
   obj[prefix + "ConsecutiveDelimiters"] = static_cast<int>(m_WizardData.consecutiveDelimiters);
   obj[prefix + "InputFilePath"] = m_WizardData.inputFilePath;
   obj[prefix + "NumberOfLines"] = m_WizardData.numberOfLines;
+  obj[prefix + "AutomaticAM"] = m_WizardData.automaticAM;
+
+  QJsonObject dapObj;
+  m_WizardData.selectedPath.writeJson(dapObj);
+  obj[prefix + "SelectedPath"] = dapObj;
 
   {
     QJsonArray jsonArray;
@@ -208,7 +213,7 @@ void ImportASCIIData::writeFilterParameters(QJsonObject& obj)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::initialize()
+void ReadASCIIData::initialize()
 {
   m_ASCIIArrayMap.clear();
 }
@@ -216,7 +221,7 @@ void ImportASCIIData::initialize()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::dataCheck()
+void ReadASCIIData::dataCheck()
 {
   setErrorCondition(0);
   m_ASCIIArrayMap.clear();
@@ -233,6 +238,8 @@ void ImportASCIIData::dataCheck()
   QString inputFilePath = wizardData.inputFilePath;
   QStringList headers = wizardData.dataHeaders;
   QStringList dataTypes = wizardData.dataTypes;
+  bool automaticAM = wizardData.automaticAM;
+  DataArrayPath selectedPath = wizardData.selectedPath;
   QVector<size_t> tDims = wizardData.tupleDims;
   QVector<size_t> cDims(1, 1);
 
@@ -250,54 +257,68 @@ void ImportASCIIData::dataCheck()
     notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
   }
 
-  AttributeMatrix::Pointer am = getDataContainerArray()->getAttributeMatrix(m_AttributeMatrixPath);
-  if(nullptr == am.get())
+  if (automaticAM == false)
   {
-    QString ss = "The attribute matrix input is empty. Please select an attribute matrix.";
-    setErrorCondition(EMPTY_ATTR_MATRIX);
-    notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
-    return;
-  }
-  else if(am->getTupleDimensions() != tDims)
-  {
-
-    QString ss = "The attribute matrix '" + m_AttributeMatrixPath.getAttributeMatrixName() + "' does not have the same tuple dimensions as the data in the file '" + fi.fileName() + "'.";
-    QTextStream out(&ss);
-    out << m_AttributeMatrixPath.getAttributeMatrixName() << " tuple dims: " << am->getTupleDimensions().at(0) << "\n";
-    out << fi.fileName() << "tuple dims: " << tDims[0] << "\n";
-    setErrorCondition(INCONSISTENT_TUPLES);
-    notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
-    return;
-  }
-
-  QStringList amArrays = am->getAttributeArrayNames();
-  for(int i = 0; i < amArrays.size(); i++)
-  {
-    QString amArrayName = amArrays[i];
-    for(int j = 0; j < headers.size(); j++)
+    AttributeMatrix::Pointer am = getDataContainerArray()->getAttributeMatrix(selectedPath);
+    if(nullptr == am.get())
     {
-      QString headerName = headers[j];
-      if(amArrayName == headerName)
+      QString ss = "The attribute matrix input is empty. Please select an attribute matrix.";
+      setErrorCondition(EMPTY_ATTR_MATRIX);
+      notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
+      return;
+    }
+    if (am->getTupleDimensions() != tDims)
+    {
+      QString ss = "The attribute matrix '" + selectedPath.getAttributeMatrixName() + "' does not have the same tuple dimensions as the data in the file '" + fi.fileName() + "'.";
+      QTextStream out(&ss);
+      out << selectedPath.getAttributeMatrixName() << " tuple dims: " << am->getTupleDimensions().at(0) << "\n";
+      out << fi.fileName() << "tuple dims: " << tDims[0] << "\n";
+      setErrorCondition(INCONSISTENT_TUPLES);
+      notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
+      return;
+    }
+
+    QStringList amArrays = am->getAttributeArrayNames();
+    for (int i = 0; i < amArrays.size(); i++)
+    {
+      QString amArrayName = amArrays[i];
+      for (int j = 0; j < headers.size(); j++)
       {
-        QString ss = "The header name \"" + headerName + "\" matches an array name that already exists in the selected attribute matrix.";
-        setErrorCondition(DUPLICATE_NAMES);
-        notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
-        return;
+        QString headerName = headers[j];
+        if (amArrayName == headerName)
+        {
+          QString ss = "The header name \"" + headerName + "\" matches an array name that already exists in the selected attribute matrix.";
+          setErrorCondition(DUPLICATE_NAMES);
+          notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
+          return;
+        }
       }
+    }
+  }
+  else
+  {
+    AttributeMatrix::Pointer am = getDataContainerArray()->getAttributeMatrix(selectedPath);
+    if (am != nullptr)
+    {
+      // Attribute Matrix already exists, so you need to pick a different attribute matrix name
+    }
+    else
+    {
+      DataContainer::Pointer dc = getDataContainerArray()->getPrereqDataContainer(this, selectedPath.getDataContainerName());
+      dc->createNonPrereqAttributeMatrix(this, selectedPath.getAttributeMatrixName(), tDims, SIMPL::AttributeMatrixType::Generic);
     }
   }
 
   // Create the arrays
-  QList<AbstractDataParser::Pointer> dataParsers;
   for(int i = 0; i < dataTypes.size(); i++)
   {
     QString dataType = dataTypes[i];
     QString name = headers[i];
 
-    DataArrayPath arrayPath = m_AttributeMatrixPath;
+    DataArrayPath arrayPath = selectedPath;
     arrayPath.setDataArrayName(name);
 
-    if(dataType == SIMPL::TypeNames::Double)
+    if (dataType == SIMPL::TypeNames::Double)
     {
       DoubleArrayType::Pointer ptr = getDataContainerArray()->createNonPrereqArrayFromPath<DoubleArrayType, AbstractFilter>(this, arrayPath, 0, cDims);
       m_ASCIIArrayMap.insert(i, ptr);
@@ -353,7 +374,7 @@ void ImportASCIIData::dataCheck()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::preflight()
+void ReadASCIIData::preflight()
 {
   // These are the REQUIRED lines of CODE to make sure the filter behaves correctly
   setInPreflight(true);              // Set the fact that we are preflighting.
@@ -367,7 +388,7 @@ void ImportASCIIData::preflight()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportASCIIData::execute()
+void ReadASCIIData::execute()
 {
   setErrorCondition(0);
   initialize();
@@ -536,9 +557,9 @@ void ImportASCIIData::execute()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-AbstractFilter::Pointer ImportASCIIData::newFilterInstance(bool copyFilterParameters)
+AbstractFilter::Pointer ReadASCIIData::newFilterInstance(bool copyFilterParameters)
 {
-  ImportASCIIData::Pointer filter = ImportASCIIData::New();
+  ReadASCIIData::Pointer filter = ReadASCIIData::New();
   if(true == copyFilterParameters)
   {
     copyFilterParameterInstanceVariables(filter.get());
@@ -549,7 +570,7 @@ AbstractFilter::Pointer ImportASCIIData::newFilterInstance(bool copyFilterParame
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString ImportASCIIData::getCompiledLibraryName()
+const QString ReadASCIIData::getCompiledLibraryName()
 {
   return IOConstants::IOBaseName;
 }
@@ -557,7 +578,7 @@ const QString ImportASCIIData::getCompiledLibraryName()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString ImportASCIIData::getGroupName()
+const QString ReadASCIIData::getGroupName()
 {
   return SIMPL::FilterGroups::IOFilters;
 }
@@ -565,7 +586,7 @@ const QString ImportASCIIData::getGroupName()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString ImportASCIIData::getSubGroupName()
+const QString ReadASCIIData::getSubGroupName()
 {
   return SIMPL::FilterSubGroups::InputFilters;
 }
@@ -573,7 +594,7 @@ const QString ImportASCIIData::getSubGroupName()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-const QString ImportASCIIData::getHumanLabel()
+const QString ReadASCIIData::getHumanLabel()
 {
-  return "Import ASCII Data";
+  return "Read ASCII Data";
 }
