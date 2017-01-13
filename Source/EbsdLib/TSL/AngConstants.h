@@ -40,6 +40,8 @@
 #ifndef _angconstants_h_
 #define _angconstants_h_
 
+#include <QtCore/QString>
+
 /**
  * @file AngConstants.h
  * @brief This file contains both c style macro definitions and C++ style const
@@ -58,6 +60,7 @@
 #define ANG_WORKINGDISTANCE   "WorkingDistance"
 #define ANG_WORKING_DISTANCe  "Working Distance"
 #define ANG_PHASE             "Phase"
+#define ANG_PHASE_NAME        "PhaseName"
 #define ANG_MATERIAL_NAME     "MaterialName"
 #define ANG_FORMULA           "Formula"
 #define ANG_INFO              "Info"
@@ -167,6 +170,7 @@ namespace Ebsd
     const QString WorkingDistance(ANG_WORKINGDISTANCE);
     const QString Working_Distance(ANG_WORKING_DISTANCe);
     const QString Phase(ANG_PHASE);
+    const QString PhaseName(ANG_PHASE_NAME);
     const QString MaterialName(ANG_MATERIAL_NAME);
     const QString Formula(ANG_FORMULA);
     const QString Info(ANG_INFO);
@@ -230,7 +234,7 @@ namespace Ebsd
 #define ANG_WORKINGDISTANCE_LOWER "workingdistance"
 
 #define ANG_PHASE_LOWER "phase"
-#define ANG_MATERIAL_NAME_LOWER "materialname"
+#define ANG_PHASE_NAME_LOWER "materialname"
 #define ANG_FORMULA_LOWER "formula"
 #define ANG_INFO_LOWER "info"
 #define ANG_SYMMETRY_LOWER "symmetry"
@@ -282,7 +286,7 @@ namespace Ebsd
     const QString ZStarLower(ANG_Z_STAR_LOWER);
     const QString WorkingDistanceLower(ANG_WORKINGDISTANCE_LOWER);
     const QString PhaseLower(ANG_PHASE_LOWER);
-    const QString MaterialNameLower(ANG_MATERIAL_NAME_LOWER);
+    const QString MaterialNameLower(ANG_PHASE_NAME_LOWER);
     const QString FormulaLower(ANG_FORMULA_LOWER);
     const QString InfoLower(ANG_INFO_LOWER);
     const QString SymmetryLower(ANG_SYMMETRY_LOWER);
