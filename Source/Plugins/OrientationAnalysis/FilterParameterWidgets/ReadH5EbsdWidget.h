@@ -99,8 +99,8 @@ class ReadH5EbsdWidget : public FilterParameterWidget, private Ui::ReadH5EbsdWid
     void parametersChanged();
 
   protected slots:
-    void on_m_InputFileBtn_clicked();
-    void on_m_InputFile_textChanged(const QString& text);
+    void on_m_LineEditBtn_clicked();
+    void on_m_LineEdit_textChanged(const QString& text);
     void on_m_CellList_itemClicked(QListWidgetItem* item);
     void on_m_DataArraysCheckBox_stateChanged(int state);
     void on_m_ZStartIndex_valueChanged(int value);
@@ -110,9 +110,8 @@ class ReadH5EbsdWidget : public FilterParameterWidget, private Ui::ReadH5EbsdWid
 
 
   protected:
-    static void setOpenDialogLastDirectory(QString val) { m_OpenDialogLastDirectory = val; }
-    static QString getOpenDialogLastDirectory() { return m_OpenDialogLastDirectory; }
-
+    void setInputFilePath(QString val);
+    QString getInputFilePath();
 
     /**
      * @brief setInputFile
@@ -129,14 +128,6 @@ class ReadH5EbsdWidget : public FilterParameterWidget, private Ui::ReadH5EbsdWid
      * @brief setWidgetListEnabled
      */
     void setWidgetListEnabled(bool v);
-
-    /**
-     * @brief verifyPathExists
-     * @param outFilePath
-     * @param lineEdit
-     * @return
-     */
-    bool verifyPathExists(QString outFilePath, QLineEdit* lineEdit);
 
     /**
      * @brief resetGuiFileInfoWidgets
@@ -164,16 +155,31 @@ class ReadH5EbsdWidget : public FilterParameterWidget, private Ui::ReadH5EbsdWid
     void updateModelFromFilter(QSet<QString>& arrayNames, bool setChecked = false);
 
 
+    /**
+    * @brief
+    * @param event
+    */
+    void keyPressEvent(QKeyEvent* event);
+
+    /**
+     * @brief setupMenuField
+     */
+    void setupMenuField();
+
+  
   private:
-    ReadH5Ebsd*         m_Filter;
-    ReadH5EbsdFilterParameter*          m_FilterParameter;
+    ReadH5Ebsd*         m_Filter = nullptr;
+    ReadH5EbsdFilterParameter*          m_FilterParameter = nullptr;
     QList<QWidget*>             m_WidgetList;
     AxisAngleInput_t m_SampleTransformation;
     AxisAngleInput_t m_EulerTransformation;
-    bool m_Version4Warning;
-    static QString                m_OpenDialogLastDirectory;
-    bool m_DidCausePreflight;
+
+    QAction* m_ShowFileAction = nullptr;
+    QString  m_CurrentlyValidPath = "";
+    QString  m_CurrentText = "";
+    bool     m_DidCausePreflight = false;
     bool m_NewFileLoaded;
+    bool m_Version4Warning;
 
     ReadH5EbsdWidget(const ReadH5EbsdWidget&); // Copy Constructor Not Implemented
     void operator=(const ReadH5EbsdWidget&); // Operator '=' Not Implemented

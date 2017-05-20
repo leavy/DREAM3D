@@ -38,6 +38,10 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMessageBox>
+#include <QtGui/QPainter>
+#include <QtGui/QKeyEvent>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
 
 #include "EbsdLib/EbsdConstants.h"
 #include "EbsdLib/H5EbsdVolumeInfo.h"
@@ -52,21 +56,19 @@
 #include "SVWidgetsLib/QtSupport/QtSFileCompleter.h"
 #include "SVWidgetsLib/QtSupport/QtSHelpUrlGenerator.h"
 #include "SVWidgetsLib/QtSupport/QtSMacros.h"
+#include "SVWidgetsLib/QtSupport/QtSFileUtils.h"
 
 #include "OrientationAnalysis/FilterParameters/ReadH5EbsdFilterParameter.h"
 #include "OrientationAnalysis/OrientationAnalysisFilters/ReadH5Ebsd.h"
-
-// Initialize private static member variable
-QString ReadH5EbsdWidget::m_OpenDialogLastDirectory = "";
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 ReadH5EbsdWidget::ReadH5EbsdWidget(FilterParameter* parameter, AbstractFilter* filter, QWidget* parent)
 : FilterParameterWidget(parameter, filter, parent)
-, m_Version4Warning(false)
 , m_DidCausePreflight(false)
 , m_NewFileLoaded(false)
+, m_Version4Warning(false)
 {
   m_FilterParameter = dynamic_cast<ReadH5EbsdFilterParameter*>(parameter);
 
@@ -84,12 +86,13 @@ ReadH5EbsdWidget::ReadH5EbsdWidget(FilterParameter* parameter, AbstractFilter* f
 
   qRegisterMetaType<QSet<QString>>("QSet<QString>");
 
-  if(getOpenDialogLastDirectory().isEmpty())
-  {
-    setOpenDialogLastDirectory(QDir::homePath());
-  }
   setupUi(this);
   setupGui();
+
+  if(m_LineEdit->text().isEmpty())
+  {
+    setInputFilePath(QDir::homePath());
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -158,14 +161,22 @@ void ReadH5EbsdWidget::setupGui()
   connect(m_Filter, SIGNAL(updateFilterParameters(AbstractFilter*)), this, SLOT(filterNeedsInputParameters(AbstractFilter*)));
 
   QtSFileCompleter* com = new QtSFileCompleter(this, false);
-  m_InputFile->setCompleter(com);
-  QObject::connect(com, SIGNAL(activated(const QString&)), this, SLOT(on_m_InputFile_textChanged(const QString&)));
+  m_LineEdit->setCompleter(com);
+  QObject::connect(com, SIGNAL(activated(const QString&)), this, SLOT(on_m_LineEdit_textChanged(const QString&)));
+
+  setupMenuField();
 
   validateInputFile();
 
   // Setup the GUI widgets from what ever is in the Filter instance
+  QString inputPath = m_Filter->getInputFile();
+  if(inputPath.isEmpty())
+  {
+    inputPath = QDir::homePath();
+  }
+  m_LineEdit->setText(inputPath);
 
-  m_InputFile->setText(m_Filter->getInputFile());
+
   // Set the initial range based on the z min & z max. This will get adjusted later
   m_ZStartIndex->setRange(0, m_Filter->getZEndIndex());
   m_ZStartIndex->setValue(m_Filter->getZStartIndex());
@@ -180,6 +191,65 @@ void ReadH5EbsdWidget::setupGui()
   QSet<QString> selectedArrays = m_Filter->getSelectedArrayNames();
   updateModelFromFilter(selectedArrays, true);
 }
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReadH5EbsdWidget::keyPressEvent(QKeyEvent* event)
+{
+  if (event->key() == Qt::Key_Escape)
+  {
+    m_LineEdit->setText(m_CurrentText);
+    m_LineEdit->setStyleSheet("");
+    m_LineEdit->setToolTip("");
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReadH5EbsdWidget::setupMenuField()
+{
+  QFileInfo fi(m_LineEdit->text());
+
+  QMenu* lineEditMenu = new QMenu(m_LineEdit);
+  m_LineEdit->setButtonMenu(QtSLineEdit::Left, lineEditMenu);
+  QLatin1String iconPath = QLatin1String(":/caret-bottom.png");
+
+  m_LineEdit->setButtonVisible(QtSLineEdit::Left, true);
+
+  QPixmap pixmap(8, 8);
+  pixmap.fill(Qt::transparent);
+  QPainter painter(&pixmap);
+  const QPixmap mag = QPixmap(iconPath);
+  painter.drawPixmap(0, (pixmap.height() - mag.height()) / 2, mag);
+  m_LineEdit->setButtonPixmap(QtSLineEdit::Left, pixmap);
+
+  {
+    m_ShowFileAction = new QAction(lineEditMenu);
+    m_ShowFileAction->setObjectName(QString::fromUtf8("showFileAction"));
+#if defined(Q_OS_WIN)
+  m_ShowFileAction->setText("Show in Windows Explorer");
+#elif defined(Q_OS_MAC)
+  m_ShowFileAction->setText("Show in Finder");
+#else
+  m_ShowFileAction->setText("Show in File System");
+#endif
+    lineEditMenu->addAction(m_ShowFileAction);
+    connect(m_ShowFileAction, SIGNAL(triggered()), this, SLOT(showFileInFileSystem()));
+  }
+
+
+  if (m_LineEdit->text().isEmpty() == false && fi.exists())
+  {
+    m_ShowFileAction->setEnabled(true);
+  }
+  else
+  {
+    m_ShowFileAction->setDisabled(true);
+  }
+
+
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -193,19 +263,17 @@ void ReadH5EbsdWidget::validateInputFile()
     QString Ftype = m_FilterParameter->getFileType();
     QString ext = m_FilterParameter->getFileExtension();
     QString s = Ftype + QString(" Files (") + ext + QString(");;All Files(*.*)");
-    QString defaultName = m_OpenDialogLastDirectory + QDir::separator() + "Untitled";
 
     QString title = QObject::tr("Select a replacement input file in filter '%2'").arg(m_Filter->getHumanLabel());
 
-    QString file = QFileDialog::getOpenFileName(this, title, defaultName, s);
+    QString file = QFileDialog::getOpenFileName(this, title, getInputFilePath(), s);
     if(true == file.isEmpty())
     {
       file = currentPath;
     }
     file = QDir::toNativeSeparators(file);
     // Store the last used directory into the private instance variable
-    QFileInfo fi(file);
-    m_OpenDialogLastDirectory = fi.path();
+    setInputFilePath(file);
     m_Filter->setInputFile(file);
   }
 }
@@ -213,7 +281,7 @@ void ReadH5EbsdWidget::validateInputFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReadH5EbsdWidget::on_m_InputFileBtn_clicked()
+void ReadH5EbsdWidget::on_m_LineEditBtn_clicked()
 {
   QObject* whoSent = sender();
   // for QButtons we prepended "btn_" to the end of the property name so strip that off
@@ -223,8 +291,8 @@ void ReadH5EbsdWidget::on_m_InputFileBtn_clicked()
   QString Ftype = m_FilterParameter->getFileType();
   QString ext = m_FilterParameter->getFileExtension();
   QString s = Ftype + QString("HDF5 EBSD Files (*.h5 *.hdf5 *.h5ang *.h5ebsd)");
-  QString defaultName = getOpenDialogLastDirectory();
-  QString inputFile = QFileDialog::getOpenFileName(this, tr("Select H5Ebsd Input File"), defaultName, s);
+
+  QString inputFile = QFileDialog::getOpenFileName(this, tr("Select H5Ebsd Input File"), getInputFilePath(), s);
   if(true == inputFile.isEmpty())
   {
     return;
@@ -233,17 +301,23 @@ void ReadH5EbsdWidget::on_m_InputFileBtn_clicked()
   inputFile = QDir::toNativeSeparators(inputFile);
   if(!inputFile.isNull())
   {
-    m_InputFile->setText(inputFile); // Should cause a signal to be emitted
+    m_LineEdit->setText(inputFile); // Should cause a signal to be emitted
   }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReadH5EbsdWidget::on_m_InputFile_textChanged(const QString& text)
+void ReadH5EbsdWidget::on_m_LineEdit_textChanged(const QString& text)
 {
-  setOpenDialogLastDirectory(m_InputFile->text());
-  verifyPathExists(m_InputFile->text(), m_InputFile);
+  if(verifyPathExists(m_LineEdit->text(), m_LineEdit) )
+  {
+    m_ShowFileAction->setEnabled(true);
+  }
+  else
+  {
+    m_ShowFileAction->setEnabled(false);
+  }
 
   m_NewFileLoaded = true;
   // Clear the QListWidget
@@ -254,7 +328,7 @@ void ReadH5EbsdWidget::on_m_InputFile_textChanged(const QString& text)
   m_DidCausePreflight = true;
 
   // We need to send the file down to the filter BEFORE any of the preflight starts because it needs this updated file
-  m_Filter->setInputFile(m_InputFile->text());
+  m_Filter->setInputFile(m_LineEdit->text());
   // Once the input file is changed then kick off the prefligth by emitting the parametersChanged() signal
   emit parametersChanged();
   m_DidCausePreflight = false;
@@ -366,24 +440,6 @@ void ReadH5EbsdWidget::on_m_AngleRepresentationCB_currentIndexChanged(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool ReadH5EbsdWidget::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
-{
-  //  std::cout << "outFilePath: " << outFilePath.toStdString() << std::endl;
-  QFileInfo fileinfo(outFilePath);
-  if(false == fileinfo.exists())
-  {
-    lineEdit->setStyleSheet("border: 1px solid red;");
-  }
-  else
-  {
-    lineEdit->setStyleSheet("");
-  }
-  return fileinfo.exists();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void ReadH5EbsdWidget::filterNeedsInputParameters(AbstractFilter* filter)
 {
   if(nullptr == filter)
@@ -396,7 +452,7 @@ void ReadH5EbsdWidget::filterNeedsInputParameters(AbstractFilter* filter)
   Q_ASSERT_X(nullptr != readEbsd, "ReadH5EbsdWidget can ONLY be used with ReadH5Ebsd filter", __FILE__);
 
   bool ok = false;
-  readEbsd->setInputFile(m_InputFile->text());
+  readEbsd->setInputFile(m_LineEdit->text());
   readEbsd->setZStartIndex(m_ZStartIndex->text().toLongLong(&ok));
   readEbsd->setZEndIndex(m_ZEndIndex->text().toLongLong(&ok));
   readEbsd->setUseTransformations(m_UseTransformations->isChecked());
@@ -501,14 +557,14 @@ void ReadH5EbsdWidget::updateModelFromFilter(QSet<QString>& arrayNames, bool set
 // -----------------------------------------------------------------------------
 void ReadH5EbsdWidget::updateFileInfoWidgets()
 {
-  if(verifyPathExists(m_InputFile->text(), m_InputFile))
+  if(verifyPathExists(m_LineEdit->text(), m_LineEdit))
   {
-    QFileInfo fi(m_InputFile->text());
+    QFileInfo fi(m_LineEdit->text());
     if(fi.exists() && fi.isFile())
     {
       // Read the Phase information from the .h5ang file
       H5EbsdVolumeReader::Pointer h5Reader = H5EbsdVolumeReader::New();
-      h5Reader->setFileName(m_InputFile->text());
+      h5Reader->setFileName(m_LineEdit->text());
 
       float xres = 0.0f;
       float yres = 0.0f;
@@ -648,4 +704,25 @@ void ReadH5EbsdWidget::resetGuiFileInfoWidgets()
   m_ZMin->setText("xxx");
   m_ZMax->setText("xxx");
   m_RefFrameZDir->setText("xxx");
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReadH5EbsdWidget::setInputFilePath(QString val)
+{
+  m_LineEdit->setText(val);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QString ReadH5EbsdWidget::getInputFilePath()
+{
+  if(m_LineEdit->text().isEmpty())
+  {
+    return QDir::homePath();
+  }
+
+  return m_LineEdit->text();
 }

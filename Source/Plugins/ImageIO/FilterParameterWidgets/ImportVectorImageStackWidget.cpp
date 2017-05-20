@@ -49,17 +49,20 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QListWidget>
 #include <QtWidgets/QListWidgetItem>
+#include <QtGui/QPainter>
+#include <QtGui/QKeyEvent>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QMenu>
 
 #include "SIMPLib/Common/Constants.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
 #include "SIMPLib/Utilities/FilePathGenerator.h"
 
 #include "SVWidgetsLib/QtSupport/QtSFileCompleter.h"
+#include "SVWidgetsLib/QtSupport/QtSFileUtils.h"
 
 #include "ImageIO/ImageIOFilters/ImportVectorImageStack.h"
 
-// Initialize private static member variable
-QString ImportVectorImageStackWidget::m_OpenDialogLastDirectory = "";
 
 // -----------------------------------------------------------------------------
 //
@@ -72,13 +75,13 @@ ImportVectorImageStackWidget::ImportVectorImageStackWidget(FilterParameter* para
   m_Filter = qobject_cast<ImportVectorImageStack*>(filter);
   Q_ASSERT_X(nullptr != m_Filter, "ImportVectorImageStackWidget can ONLY be used with ImportVectorImageStack filter", __FILE__);
 
-  if(getOpenDialogLastDirectory().isEmpty())
-  {
-    setOpenDialogLastDirectory(QDir::homePath());
-  }
   setupUi(this);
   setupGui();
-  // checkIOFiles();
+
+  if(m_LineEdit->text().isEmpty())
+  {
+    setInputDirectory(QDir::homePath());
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -131,9 +134,12 @@ void ImportVectorImageStackWidget::setupGui()
   connect(m_Filter, SIGNAL(updateFilterParameters(AbstractFilter*)), this, SLOT(filterNeedsInputParameters(AbstractFilter*)));
 
   QtSFileCompleter* com = new QtSFileCompleter(this, true);
-  m_InputDir->setCompleter(com);
-  QObject::connect(com, SIGNAL(activated(const QString&)), this, SLOT(on_m_InputDir_textChanged(const QString&)));
+  m_LineEdit->setCompleter(com);
+  QObject::connect(com, SIGNAL(activated(const QString&)), this, SLOT(on_m_LineEdit_textChanged(const QString&)));
 
+  setupMenuField();
+  
+  
   {
     QDoubleValidator* validator = new QDoubleValidator(xRes);
     validator->setDecimals(4);
@@ -165,7 +171,7 @@ void ImportVectorImageStackWidget::setupGui()
     zOrigin->setValidator(validator);
   }
 
-  m_WidgetList << m_InputDir << m_InputDirBtn;
+  m_WidgetList << m_LineEdit << m_InputDirBtn;
   m_WidgetList << m_FileExt << m_ErrorMessage << m_TotalDigits << m_Separator << m_FileSuffix;
   m_WidgetList << m_FilePrefix << m_TotalSlices << m_StartIndex << m_EndIndex << m_StartComp << m_EndComp;
   m_WidgetList << xRes << yRes << zRes;
@@ -191,6 +197,63 @@ void ImportVectorImageStackWidget::setupGui()
   validateInputFile();
   getGuiParametersFromFilter();
 }
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ImportVectorImageStackWidget::keyPressEvent(QKeyEvent* event)
+{
+  if (event->key() == Qt::Key_Escape)
+  {
+    m_LineEdit->setText(m_CurrentText);
+    m_LineEdit->setStyleSheet("");
+    m_LineEdit->setToolTip("");
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ImportVectorImageStackWidget::setupMenuField()
+{
+  QFileInfo fi(m_LineEdit->text());
+
+  QMenu* lineEditMenu = new QMenu(m_LineEdit);
+  m_LineEdit->setButtonMenu(QtSLineEdit::Left, lineEditMenu);
+  QLatin1String iconPath = QLatin1String(":/caret-bottom.png");
+
+  m_LineEdit->setButtonVisible(QtSLineEdit::Left, true);
+
+  QPixmap pixmap(8, 8);
+  pixmap.fill(Qt::transparent);
+  QPainter painter(&pixmap);
+  const QPixmap mag = QPixmap(iconPath);
+  painter.drawPixmap(0, (pixmap.height() - mag.height()) / 2, mag);
+  m_LineEdit->setButtonPixmap(QtSLineEdit::Left, pixmap);
+
+  {
+    m_ShowFileAction = new QAction(lineEditMenu);
+    m_ShowFileAction->setObjectName(QString::fromUtf8("showFileAction"));
+#if defined(Q_OS_WIN)
+  m_ShowFileAction->setText("Show in Windows Explorer");
+#elif defined(Q_OS_MAC)
+  m_ShowFileAction->setText("Show in Finder");
+#else
+  m_ShowFileAction->setText("Show in File System");
+#endif
+    lineEditMenu->addAction(m_ShowFileAction);
+    connect(m_ShowFileAction, SIGNAL(triggered()), this, SLOT(showFileInFileSystem()));
+  }
+
+
+  if (m_LineEdit->text().isEmpty() == false && fi.exists())
+  {
+    m_ShowFileAction->setEnabled(true);
+  }
+  else
+  {
+    m_ShowFileAction->setDisabled(true);
+  }
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -198,7 +261,7 @@ void ImportVectorImageStackWidget::setupGui()
 void ImportVectorImageStackWidget::getGuiParametersFromFilter()
 {
   blockSignals(true);
-  m_InputDir->setText(m_Filter->getInputPath());
+  m_LineEdit->setText(m_Filter->getInputPath());
 
   m_StartIndex->setValue(m_Filter->getStartIndex());
   m_EndIndex->setValue(m_Filter->getEndIndex());
@@ -235,8 +298,7 @@ void ImportVectorImageStackWidget::validateInputFile()
     //    QString Ftype = getFilterParameter()->getFileType();
     //    QString ext = getFilterParameter()->getFileExtension();
     //    QString s = Ftype + QString(" Files (") + ext + QString(");;All Files(*.*)");
-    QString defaultName = m_OpenDialogLastDirectory;
-
+    QString defaultName = getInputDirectory();
     QString title = QObject::tr("Select a replacement input file in filter '%2'").arg(m_Filter->getHumanLabel());
 
     QString file = QFileDialog::getExistingDirectory(this, title, defaultName, QFileDialog::ShowDirsOnly);
@@ -247,7 +309,7 @@ void ImportVectorImageStackWidget::validateInputFile()
     file = QDir::toNativeSeparators(file);
     // Store the last used directory into the private instance variable
     QFileInfo fi(file);
-    m_OpenDialogLastDirectory = fi.path();
+    setInputDirectory(fi.path());
     m_Filter->setInputPath(file);
   }
 }
@@ -293,27 +355,9 @@ void ImportVectorImageStackWidget::originChanged(const QString& string)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool ImportVectorImageStackWidget::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
-{
-  //  std::cout << "outFilePath: " << outFilePath << std::endl;
-  QFileInfo fileinfo(outFilePath);
-  if(false == fileinfo.exists())
-  {
-    lineEdit->setStyleSheet("border: 1px solid red;");
-  }
-  else
-  {
-    lineEdit->setStyleSheet("");
-  }
-  return fileinfo.exists();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void ImportVectorImageStackWidget::checkIOFiles()
 {
-  if(true == this->verifyPathExists(m_InputDir->text(), this->m_InputDir))
+  if(true == this->verifyPathExists(m_LineEdit->text(), this->m_LineEdit))
   {
     findMaxSliceAndPrefix();
   }
@@ -325,38 +369,40 @@ void ImportVectorImageStackWidget::checkIOFiles()
 void ImportVectorImageStackWidget::on_m_InputDirBtn_clicked()
 {
   // std::cout << "on_angDirBtn_clicked" << std::endl;
-  QString outputFile = this->getOpenDialogLastDirectory() + QDir::separator();
+  QString outputFile = this->getInputDirectory();
+
   outputFile = QFileDialog::getExistingDirectory(this, tr("Select Image Directory"), outputFile);
   if(!outputFile.isNull())
   {
-    m_InputDir->blockSignals(true);
-    m_InputDir->setText(QDir::toNativeSeparators(outputFile));
-    on_m_InputDir_textChanged(m_InputDir->text());
-    getOpenDialogLastDirectory() = outputFile;
-    m_InputDir->blockSignals(false);
+    m_LineEdit->blockSignals(true);
+    m_LineEdit->setText(QDir::toNativeSeparators(outputFile));
+    on_m_LineEdit_textChanged(m_LineEdit->text());
+    setInputDirectory(outputFile);
+    m_LineEdit->blockSignals(false);
   }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ImportVectorImageStackWidget::on_m_InputDir_textChanged(const QString& text)
+void ImportVectorImageStackWidget::on_m_LineEdit_textChanged(const QString& text)
 {
-  if(verifyPathExists(m_InputDir->text(), m_InputDir))
+  if(verifyPathExists(m_LineEdit->text(), m_LineEdit))
   {
-
+    m_ShowFileAction->setEnabled(true);
     findMaxSliceAndPrefix();
-    QDir dir(m_InputDir->text());
+    QDir dir(m_LineEdit->text());
     QString dirname = dir.dirName();
     dir.cdUp();
 
     generateExampleInputFile();
-    m_InputDir->blockSignals(true);
-    m_InputDir->setText(QDir::toNativeSeparators(m_InputDir->text()));
-    m_InputDir->blockSignals(false);
+    m_LineEdit->blockSignals(true);
+    m_LineEdit->setText(QDir::toNativeSeparators(m_LineEdit->text()));
+    m_LineEdit->blockSignals(false);
   }
   else
   {
+    m_ShowFileAction->setDisabled(true);
     m_FileListView->clear();
   }
 }
@@ -504,7 +550,7 @@ void ImportVectorImageStackWidget::generateExampleInputFile()
   bool hasMissingFiles = false;
 
   // Now generate all the file names the user is asking for and populate the table
-  QVector<QString> fileList = FilePathGenerator::GenerateVectorFileList(start, end, cstart, cend, hasMissingFiles, m_StackLowToHigh->isChecked(), m_InputDir->text(), m_FilePrefix->text(),
+  QVector<QString> fileList = FilePathGenerator::GenerateVectorFileList(start, end, cstart, cend, hasMissingFiles, m_StackLowToHigh->isChecked(), m_LineEdit->text(), m_FilePrefix->text(),
                                                                         m_Separator->text(), m_FileSuffix->text(), m_FileExt->text(), m_TotalDigits->value());
   m_FileListView->clear();
   QIcon greenDot = QIcon(QString(":/bullet_ball_green.png"));
@@ -542,11 +588,11 @@ void ImportVectorImageStackWidget::generateExampleInputFile()
 // -----------------------------------------------------------------------------
 void ImportVectorImageStackWidget::findMaxSliceAndPrefix()
 {
-  if(m_InputDir->text().length() == 0)
+  if(m_LineEdit->text().length() == 0)
   {
     return;
   }
-  QDir dir(m_InputDir->text());
+  QDir dir(m_LineEdit->text());
 
   // Final check to make sure we have a valid file extension
   if(m_FileExt->text().isEmpty() == true)
@@ -656,7 +702,7 @@ void ImportVectorImageStackWidget::filterNeedsInputParameters(AbstractFilter* fi
   Q_ASSERT_X(nullptr != m_Filter, "ImportVectorImageStackWidget can ONLY be used with ImportVectorImageStack filter", __FILE__);
 
   bool ok = false;
-  f->setInputPath(m_InputDir->text());
+  f->setInputPath(m_LineEdit->text());
   f->setResolution(getResolutionValues());
   f->setOrigin(getOriginValues());
 
@@ -714,4 +760,24 @@ void ImportVectorImageStackWidget::beforePreflight()
 // -----------------------------------------------------------------------------
 void ImportVectorImageStackWidget::afterPreflight()
 {
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ImportVectorImageStackWidget::setInputDirectory(QString val) 
+{
+  m_LineEdit->setText(val);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QString ImportVectorImageStackWidget::getInputDirectory() 
+{
+  if(m_LineEdit->text().isEmpty())
+  {
+    return QDir::homePath();
+  }
+  return m_LineEdit->text();
 }

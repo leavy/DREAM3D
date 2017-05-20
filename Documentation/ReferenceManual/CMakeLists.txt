@@ -62,6 +62,9 @@ if(DREAM3D_INCLUDE_DEVELOPER_DOCS)
     \"${PROJECT_SOURCE_DIR}/Developer/SDKInstall.md\"
     \"${PROJECT_SOURCE_DIR}/Developer/SourceDownload.md\"
     \"${PROJECT_SOURCE_DIR}/Developer/Versioning.md\"
+    \"${PROJECT_SOURCE_DIR}/Developer/WritingAFilter.md\"
+    \"${PROJECT_SOURCE_DIR}/Developer/DataCheck.md\"
+    \"${PROJECT_SOURCE_DIR}/Developer/Execute.md\"
   )
 endif()
 
@@ -109,7 +112,9 @@ foreach( group ${DREAM3D_DOC_GROUPS_FILE_LIST} )
   foreach(filterPath ${filter_path_list})
     get_filename_component(filter  ${filterPath} NAME_WE)
     get_filename_component(group_path ${filterPath} PATH)
-    list(APPEND DOXYGEN_IMAGE_DIRS "\"${group_path}\"")
+    if(EXISTS "${group_path}/Images")
+      list(APPEND DOXYGEN_IMAGE_DIRS "\"${group_path}/Images\"")
+    endif()
     string(TOLOWER ${filter} filter_Lower)
     file(APPEND ${DREAM3DReferenceManual_BINARY_DIR}/FilterDocumentation.dox "@subpage ${filter_Lower}\n\n")
     list(APPEND DOCUMENTATION_SOURCE_FILES "\"${filterPath}\"")
