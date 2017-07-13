@@ -441,9 +441,9 @@ void PackPrimaryPhases::setupFilterParameters()
     parameter->setGetterCallback(SIMPL_BIND_GETTER(PackPrimaryPhases, this, SaveGeometricDescriptions));
 
     QVector<QString> choices;
+    choices.push_back("Do Not Save");
     choices.push_back("Save To New Attribute Matrix");
     choices.push_back("Append To Existing Attribute Matrix");
-    choices.push_back("Do Not Save");
     parameter->setChoices(choices);
     QStringList linkedProps;
     linkedProps << "NewAttributeMatrixPath"
@@ -456,12 +456,12 @@ void PackPrimaryPhases::setupFilterParameters()
 
   {
     AttributeMatrixCreationFilterParameter::RequirementType req;
-    parameters.push_back(SIMPL_NEW_AM_CREATION_FP("New Attribute Matrix", NewAttributeMatrixPath, FilterParameter::Parameter, PackPrimaryPhases, req, 0));
+    parameters.push_back(SIMPL_NEW_AM_CREATION_FP("New Attribute Matrix", NewAttributeMatrixPath, FilterParameter::Parameter, PackPrimaryPhases, req, 1));
   }
 
   {
     AttributeMatrixSelectionFilterParameter::RequirementType req = AttributeMatrixSelectionFilterParameter::CreateRequirement(AttributeMatrix::Category::Feature);
-    parameters.push_back(SIMPL_NEW_AM_SELECTION_FP("Selected Attribute Matrix", SelectedAttributeMatrixPath, FilterParameter::Parameter, PackPrimaryPhases, req, 1));
+    parameters.push_back(SIMPL_NEW_AM_SELECTION_FP("Selected Attribute Matrix", SelectedAttributeMatrixPath, FilterParameter::Parameter, PackPrimaryPhases, req, 2));
   }
 
 #if PPP_SHOW_DEBUG_OUTPUTS
@@ -2291,6 +2291,11 @@ float PackPrimaryPhases::checkFillingError(int32_t gadd, int32_t gremove, Int32A
       plane = pl[i];
       if(m_PeriodicBoundaries == true)
       {
+        // Perform mod arithmetic to ensure we are within the packing points range
+        col = col % m_PackingPoints[0];
+        row = row % m_PackingPoints[1];
+        plane = plane % m_PackingPoints[2];
+
         if(col < 0)
         {
           col = col + m_PackingPoints[0];
@@ -2373,6 +2378,11 @@ float PackPrimaryPhases::checkFillingError(int32_t gadd, int32_t gremove, Int32A
       plane = pl[i];
       if(m_PeriodicBoundaries == true)
       {
+        // Perform mod arithmetic to ensure we are within the packing points range
+        col = col % m_PackingPoints[0];
+        row = row % m_PackingPoints[1];
+        plane = plane % m_PackingPoints[2];
+
         if(col < 0)
         {
           col = col + m_PackingPoints[0];

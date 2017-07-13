@@ -11,6 +11,27 @@ The developers of DREAM.3D maintain a pair of Google Groups for discussions on t
 
 [DREAM.3D Developers List](https://groups.google.com/forum/?hl=en#!forum/dream3d-developers)
 
+## Version 6.4.xx ##
+
++ SIMPL Issues #103: Some selection widgets do not allow selections if the filter parameter has Geometry::Type::Any as a requirement
++ SIMPL Issues #104: Pipelines with Exactly 11 filters will not load correctly 
++ DREAM3D Issue #702: Fix crashing bug in PackPrimaryPhases and InsertPrecipitates when Periodic boundaries are used.
++ DREAM3D Issue #703: Fix issue where Axis ODF values are not converted to Degrees after being
+read from a file.
++ DREAM3D Issue #704: Adjust the default to NOT save the Shape parameters during synthetic runs.
++ DREAM3D Issue #708: Fix issue where clicking create default data will also reset the ODF, MDF and Axis ODF in the StatsGenerator Widget.
+
+## Version 6.4.56 ##
+
++ CMP: Fixed issues related to packaging DREAM.3D, verbose error messages and supporting Visual Studio 2017
++ SIMPL: Added API to IDataArray to copyDataFrom() another IDataArray
++ SIMPL: Disabled the NTFS permissions checking on Windows platforms which slowed down preflights unacceptably.
++ SIMPLView: Allow an external project to set the project version strings.
++ DREAM3D: Fixed incorrect calculation of the Mean of the Log-Normal distribution
++ DREAM3D: Allow negative Mu values in StatsGenerator
++ DREAM3D: StatsGenerator, The ESD value is now Read Only as it depends on both the Mu and Sigma parameters.
++ DREAM3D: PackPrimaryPhases and InsertPrecipitatePhases now have an option to save the ellipsoid parameters and other parameters that are used to generate the synthetic shape before that shape becomes voxelized.
+
 ## Version 6.4.39 ##
 
 + SIMPL Issue #64: Can not drag multiple filters in DREAM.3D Pipeline View

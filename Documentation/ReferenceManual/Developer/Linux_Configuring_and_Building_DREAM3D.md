@@ -2,40 +2,49 @@ Configuring and Building DREAM.3D on Linux {#linux_configure_and_build_dream3d}
 ========
 
 <a name="prerequisites">
+
 ## Prerequisites ##
+
 </a>
 
-Linux is configured in much the same way as macOS.
 These prerequisites need to be completed before configuring and building DREAM.3D.
 
 If you have already fulfilled all of these prerequisites, skip to the [Setting Up DREAM.3D for CMake Configuration](#cmake_config) section.
 
 <a name="compiler_suite">
+
 ### Install a Compiler Suite ###
+
 </a>
 
 A compatible compiler needs to be installed on your system to be able to build DREAM.3D.
 
-For more information, please visit [Installing a Compiler Suite](@ref compiler_suite).
+For more information, please visit [Installing a Compiler Suite](http://dream3d.bluequartz.net/binaries/Help/DREAM3D/compiler_suite.html) (external link).
 
 <a name="downloading_dream3d">
+
 ### Download the Source Code for DREAM.3D ###
+
 </a>
 
 The source code for DREAM.3D must be downloaded using Git.
 
-For more information, please visit [Downloading the Source Code for DREAM.3D](@ref source_download).
+For more information, please visit [Downloading the Source Code for DREAM.3D](http://dream3d.bluequartz.net/binaries/Help/DREAM3D/source_download.html) (external link).
 
 <a name="installing_sdk">
+
 ### Install the DREAM.3D SDK ###
+
 </a>
 
 Developers of DREAM.3D must use the Superbuild build system to install a DREAM.3D SDK.
 
-For more information, please visit [Installing the DREAM.3D SDK](@ref sdk_install).
+For more information, please visit <a href="https://github.com/bluequartzsoftware/DREAM3DSuperbuild/blob/develop/docs/Making_an_SDK_Linux.md">Making an SDK</a>.
 
 <a name="cmake_config">
+
 ## Setting Up DREAM.3D for CMake Configuration ##
+
 </a>
 
 Once the SDK is installed, a file with the name DREAM3D_SDK.cmake can be found in the DREAM3D_SDK directory at */opt/DREAM3D_SDK/DREAM3D_SDK.cmake*. This file defines all the installed locations for all of the dependent libraries.
@@ -89,6 +98,6 @@ Navigate to the DREAM3D directory, make a build directory, and navigate into you
 Once you have configured DREAM.3D, simply build DREAM.3D in your preferred IDE, or open the Terminal app and build DREAM.3D without an IDE.
 
 ---
-**Next Page**: [Creating a Filter](@ref creating_a_filter).
+**Next Page**: [Creating a Filter](http://dream3d.bluequartz.net/binaries/Help/DREAM3D/creating_a_filter.html)
 
-**Previous Page**: [Installing the DREAM.3D SDK](@ref sdk_install).
+**Previous Page**: [Downloading the DREAM.3D Source Code](http://dream3d.bluequartz.net/binaries/Help/DREAM3D/source_download.html)
