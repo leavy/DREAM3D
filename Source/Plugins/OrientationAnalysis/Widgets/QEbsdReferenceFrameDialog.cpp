@@ -55,13 +55,12 @@
 #include "EbsdLib/HKL/CtfConstants.h"
 #include "EbsdLib/TSL/AngConstants.h"
 
-#include "SIMPLib/Common/AbstractFilter.h"
-#include "SIMPLib/Common/FilterManager.h"
-#include "SIMPLib/Common/IFilterFactory.hpp"
 #include "SIMPLib/CoreFilters/GenerateColorTable.h"
 #include "SIMPLib/DataArrays/DataArray.hpp"
 #include "SIMPLib/DataContainers/DataContainer.h"
 #include "SIMPLib/FilterParameters/FilterParameter.h"
+#include "SIMPLib/Filtering/AbstractFilter.h"
+#include "SIMPLib/Filtering/FilterManager.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
 #include "SIMPLib/SIMPLib.h"
 
@@ -576,7 +575,7 @@ void QEbsdReferenceFrameDialog::generateImageRGB(IDataArray::Pointer dataArray, 
     return;
   }
 
-  UInt8ArrayType* rgbArray = UInt8ArrayType::SafePointerDownCast(dataArray.get());
+  UInt8ArrayType::Pointer rgbArray = std::dynamic_pointer_cast<UInt8ArrayType>(dataArray);
   uint8_t* generatedColors = rgbArray->getPointer(0);
 
   for(size_t y = 0; y < dims[1]; ++y)

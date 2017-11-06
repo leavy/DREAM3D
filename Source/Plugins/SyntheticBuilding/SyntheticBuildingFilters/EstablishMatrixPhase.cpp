@@ -43,12 +43,12 @@
 #include "SIMPLib/FilterParameters/SeparatorFilterParameter.h"
 #include "SIMPLib/FilterParameters/StringFilterParameter.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
+#include "SIMPLib/Math/SIMPLibRandom.h"
 #include "SIMPLib/StatsData/BoundaryStatsData.h"
 #include "SIMPLib/StatsData/MatrixStatsData.h"
 #include "SIMPLib/StatsData/PrecipitateStatsData.h"
 #include "SIMPLib/StatsData/PrimaryStatsData.h"
 #include "SIMPLib/StatsData/TransformationStatsData.h"
-#include "SIMPLib/Utilities/SIMPLibRandom.h"
 
 #include "SyntheticBuilding/SyntheticBuildingConstants.h"
 #include "SyntheticBuilding/SyntheticBuildingVersion.h"
@@ -391,7 +391,7 @@ void EstablishMatrixPhase::establish_matrix()
   {
     if(m_PhaseTypes[i] == static_cast<PhaseType::EnumType>(PhaseType::Type::Matrix))
     {
-      MatrixStatsData* mp = MatrixStatsData::SafePointerDownCast(statsDataArray[i].get());
+      MatrixStatsData::Pointer mp = std::dynamic_pointer_cast<MatrixStatsData>(statsDataArray[i]);
       if(nullptr == mp)
       {
         QString ss = QObject::tr("Tried to cast a statsDataArray[%1].get() to a MatrixStatsData* "

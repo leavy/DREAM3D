@@ -115,13 +115,11 @@ set(StatsGenerator_PRESETS_HDRS
 cmp_IDE_SOURCE_PROPERTIES( "StatsGenerator/Presets" "${StatsGenerator_PRESETS_HDRS};${StatsGenerator_PRESETS_MOC_HDRS}" "${StatsGenerator_PRESETS_SRCS}" ${PROJECT_INSTALL_HEADERS})
 
 set(StatsGenerator_DIALOGS_SRCS
-  ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/PrimaryRolledPresetDialog.cpp
-  ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/PrecipitateRolledPresetDialog.cpp
+  ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/RolledPresetDialog.cpp
   ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/PrimaryRecrystallizedPresetDialog.cpp
 )
 set(StatsGenerator_DIALOGS_MOC_HDRS
-  ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/PrimaryRolledPresetDialog.h
-  ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/PrecipitateRolledPresetDialog.h
+  ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/RolledPresetDialog.h
   ${StatsGenerator_SOURCE_DIR}/Widgets/Presets/Dialogs/PrimaryRecrystallizedPresetDialog.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "StatsGenerator/Presets/Dialogs" "${StatsGenerator_DIALOGS_MOC_HDRS}" "${StatsGenerator_DIALOGS_SRCS}" ${PROJECT_INSTALL_HEADERS})
@@ -163,12 +161,4 @@ cmp_IDE_SOURCE_PROPERTIES( "Generated/Qt_Uic" "${${PLUGIN_NAME}_Widgets_Generate
 # with your own cmake codes to include your resource file (.qrc) and any other needed files
 # QT5_ADD_RESOURCES( ${PLUGIN_NAME}_Generated_RC_SRCS ""  )
 # cmp_IDE_SOURCE_PROPERTIES( "Generated/Qt_Qrc" "${${PLUGIN_NAME}_Generated_RC_SRCS}" "" "0")
-
-# include_directories(${${PLUGIN_NAME}_BINARY_DIR}/Widgets/Presets)
-# include_directories(${${PLUGIN_NAME}_BINARY_DIR}/Widgets/Presets/Dialogs)
-# include_directories(${${PLUGIN_NAME}_BINARY_DIR}/Widgets/Delegates)
-# include_directories(${${PLUGIN_NAME}_BINARY_DIR}/Widgets/TableModels)
-
-
-
 

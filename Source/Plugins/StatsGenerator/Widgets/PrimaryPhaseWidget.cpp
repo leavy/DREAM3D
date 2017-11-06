@@ -48,10 +48,10 @@
 // Needed for AxisAngle_t and Crystal Symmetry constants
 #include "EbsdLib/EbsdConstants.h"
 
-#include "SIMPLib/Common/AbstractFilter.h"
 #include "SIMPLib/Common/Constants.h"
 #include "SIMPLib/DataArrays/StatsDataArray.h"
 #include "SIMPLib/DataArrays/StringDataArray.hpp"
+#include "SIMPLib/Filtering/AbstractFilter.h"
 #include "SIMPLib/Math/SIMPLibMath.h"
 #include "SIMPLib/SIMPLib.h"
 #include "SIMPLib/StatsData/PrimaryStatsData.h"
@@ -60,12 +60,12 @@
 #include "OrientationLib/Texture/StatsGen.hpp"
 
 #include "StatsGenerator/StatsGeneratorConstants.h"
-#include "StatsGenerator/Widgets/StatsGenMDFWidget.h"
+#include "StatsGenerator/Widgets/Presets/Dialogs/RolledPresetDialog.h"
+#include "StatsGenerator/Widgets/Presets/Dialogs/PrimaryRecrystallizedPresetDialog.h"
 #include "StatsGenerator/Widgets/Presets/PrimaryEquiaxedPreset.h"
 #include "StatsGenerator/Widgets/Presets/PrimaryRecrystallizedPreset.h"
 #include "StatsGenerator/Widgets/Presets/PrimaryRolledPreset.h"
-#include "StatsGenerator/Widgets/Presets/Dialogs/PrimaryRolledPresetDialog.h"
-#include "StatsGenerator/Widgets/Presets/Dialogs/PrimaryRecrystallizedPresetDialog.h"
+#include "StatsGenerator/Widgets/Presets/PrecipitateRolledPreset.h"
 #include "StatsGenerator/Widgets/TableModels/SGAbstractTableModel.h"
 #include "StatsGenerator/Widgets/TableModels/SGMDFTableModel.h"
 #include "StatsGenerator/Widgets/TableModels/SGODFTableModel.h"
@@ -94,7 +94,6 @@ PrimaryPhaseWidget::PrimaryPhaseWidget(QWidget* parent)
 PrimaryPhaseWidget::~PrimaryPhaseWidget()
 {
 }
-
 
 // -----------------------------------------------------------------------------
 //
@@ -132,7 +131,6 @@ void PrimaryPhaseWidget::on_m_NeighborBtn_clicked(bool b)
   plotToolbox->setCurrentIndex(3);
 }
 
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -156,9 +154,9 @@ void PrimaryPhaseWidget::on_microstructurePresetCombo_currentIndexChanged(int in
 
   AbstractMicrostructurePreset::Pointer absPreset = getMicroPreset();
 
-  if(std::dynamic_pointer_cast<PrimaryRolledPreset>(absPreset))
+  if(std::dynamic_pointer_cast<PrimaryRolledPreset>(absPreset) || std::dynamic_pointer_cast<PrecipitateRolledPreset>(absPreset))
   {
-    PrimaryRolledPresetDialog d(nullptr);
+    RolledPresetDialog d(nullptr);
     bool keepGoing = true;
     while(keepGoing)
     {
@@ -171,10 +169,21 @@ void PrimaryPhaseWidget::on_microstructurePresetCombo_currentIndexChanged(int in
         if(a >= b && b >= c)
         {
           // The user clicked the OK button so transfer the values from the dialog into this class
-          PrimaryRolledPreset::Pointer presetPtr = std::dynamic_pointer_cast<PrimaryRolledPreset>(absPreset);
-          presetPtr->setAspectRatio1(d.getA() / d.getB());
-          presetPtr->setAspectRatio2(d.getA() / d.getC());
-          keepGoing = false;
+          QString presetName = absPreset->getName();
+          if(presetName.compare("Primary Rolled") == 0)
+          {
+            PrimaryRolledPreset::Pointer presetPtr = std::dynamic_pointer_cast<PrimaryRolledPreset>(absPreset);
+            presetPtr->setAspectRatio1(d.getA() / d.getB());
+            presetPtr->setAspectRatio2(d.getA() / d.getC());
+            keepGoing = false;
+          }
+          if(presetName.compare("Precipitate Rolled") == 0)
+          {
+            PrecipitateRolledPreset::Pointer presetPtr = std::dynamic_pointer_cast<PrecipitateRolledPreset>(absPreset);
+            presetPtr->setAspectRatio1(d.getA() / d.getB());
+            presetPtr->setAspectRatio2(d.getA() / d.getC());
+            keepGoing = false;
+          }
         }
         else
         {
@@ -202,7 +211,6 @@ void PrimaryPhaseWidget::on_microstructurePresetCombo_currentIndexChanged(int in
       // Perform any cancellation actions if the user canceled the dialog box
     }
   }
-
 }
 
 // -----------------------------------------------------------------------------
@@ -462,7 +470,6 @@ void PrimaryPhaseWidget::setupGui()
 
   connect(m_FeatureSizeDistWidget, SIGNAL(userEnteredValidData(bool)), m_GenerateDefaultData, SLOT(setEnabled(bool)));
 
-
   m_Omega3Btn->setChecked(true);
   m_DistButtonGroup.addButton(m_Omega3Btn);
   m_DistButtonGroup.addButton(m_BOverABtn);
@@ -546,7 +553,7 @@ void PrimaryPhaseWidget::dataWasEdited()
 {
   setTabsPlotTabsEnabled(true);
   m_GenerateDefaultData->setEnabled(false);
-  //this->tabWidget->setTabEnabled(0, false);
+  // this->tabWidget->setTabEnabled(0, false);
 }
 
 // -----------------------------------------------------------------------------
@@ -583,7 +590,6 @@ void PrimaryPhaseWidget::updatePlots()
     QMap<QString, QVector<float>> data;
     data[AbstractMicrostructurePreset::kBinNumbers] = binSizes;
     QVector<QColor> colors;
-
 
     getMicroPreset()->initializeOmega3TableModel(data, colors);
     m_Omega3Plot->setDistributionType(getMicroPreset()->getDistributionType(AbstractMicrostructurePreset::kOmega3Distribution), false);
@@ -632,7 +638,6 @@ void PrimaryPhaseWidget::updatePlots()
         tmodel->setTableData(binSizes, colData, colors);
       }
     }
-
 
     progress.setValue(2);
     progress.setLabelText("[2/3] Calculating ODF Data ...");
@@ -707,7 +712,7 @@ void PrimaryPhaseWidget::on_m_ResetDataBtn_clicked()
 
   setDataHasBeenGenerated(true); // Set this boolean to true so that data generation is triggered
   m_ResetData = true;
-  updatePlots();  // Regenerate all the default data
+  updatePlots(); // Regenerate all the default data
   emit dataChanged();
   m_ResetData = false;
 }
@@ -746,18 +751,18 @@ int PrimaryPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool p
   StringDataArray::Pointer phaseNameArray = std::dynamic_pointer_cast<StringDataArray>(iDataArray);
   phaseNameArray->setValue(getPhaseIndex(), getPhaseName());
 
-  StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics).get());
+  StatsDataArray::Pointer statsDataArray = std::dynamic_pointer_cast<StatsDataArray>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics));
   if(nullptr != statsDataArray)
   {
     StatsData::Pointer statsData = statsDataArray->getStatsData(getPhaseIndex());
-    PrimaryStatsData* primaryStatsData = PrimaryStatsData::SafePointerDownCast(statsData.get());
+    PrimaryStatsData::Pointer primaryStatsData = std::dynamic_pointer_cast<PrimaryStatsData>(statsData);
 
     float calcPhaseFraction = getPhaseFraction() / getTotalPhaseFraction();
 
     primaryStatsData->setPhaseFraction(calcPhaseFraction);
     statsData->setName(getPhaseName());
 
-    err = m_FeatureSizeDistWidget->getStatisticsData(primaryStatsData);
+    err = m_FeatureSizeDistWidget->getStatisticsData(primaryStatsData.get());
 
     // Now that we have bins and feature sizes, push those to the other plot widgets
     {
@@ -782,9 +787,9 @@ int PrimaryPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool p
       primaryStatsData->setNeighbors_DistType(m_NeighborPlot->getDistributionType());
     }
 
-    m_ODFWidget->getOrientationData(primaryStatsData, PhaseType::Type::Primary, preflight);
+    m_ODFWidget->getOrientationData(primaryStatsData.get(), PhaseType::Type::Primary, preflight);
 
-    err = m_AxisODFWidget->getOrientationData(primaryStatsData, PhaseType::Type::Primary, preflight);
+    err = m_AxisODFWidget->getOrientationData(primaryStatsData.get(), PhaseType::Type::Primary, preflight);
   }
   return retErr;
 }
@@ -807,13 +812,13 @@ void PrimaryPhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, int 
   setPhaseType(static_cast<PhaseType::Type>(attributeArray[index]));
 
   iDataArray = attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics);
-  StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(iDataArray.get());
+  StatsDataArray::Pointer statsDataArray = std::dynamic_pointer_cast<StatsDataArray>(iDataArray);
   if(statsDataArray == nullptr)
   {
     return;
   }
   StatsData::Pointer statsData = statsDataArray->getStatsData(index);
-  PrimaryStatsData* primaryStatsData = PrimaryStatsData::SafePointerDownCast(statsData.get());
+  PrimaryStatsData::Pointer primaryStatsData = std::dynamic_pointer_cast<PrimaryStatsData>(statsData);
 
   setPhaseFraction(primaryStatsData->getPhaseFraction());
 
@@ -880,7 +885,7 @@ void PrimaryPhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, int 
     qbins[i] = bins->getValue(i);
   }
 
-  m_FeatureSizeDistWidget->extractStatsData(primaryStatsData, index);
+  m_FeatureSizeDistWidget->extractStatsData(primaryStatsData.get(), index);
   emit progressText(QString("Extracting Size Distribution Values"));
   qApp->processEvents();
 
@@ -920,13 +925,12 @@ void PrimaryPhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, int 
   emit progressText(QString("Extracting ODF Distribution Values"));
   qApp->processEvents();
   // Set the ODF Data
-  m_ODFWidget->extractStatsData(index, primaryStatsData, PhaseType::Type::Primary);
-
+  m_ODFWidget->extractStatsData(index, primaryStatsData.get(), PhaseType::Type::Primary);
 
   emit progressText(QString("Extracting Axis ODF Distribution Values"));
   qApp->processEvents();
   // Set the Axis ODF Data
-  m_AxisODFWidget->extractStatsData(index, primaryStatsData, PhaseType::Type::Primary);
+  m_AxisODFWidget->extractStatsData(index, primaryStatsData.get(), PhaseType::Type::Primary);
 
   // Enable all the tabs
   setTabsPlotTabsEnabled(true);

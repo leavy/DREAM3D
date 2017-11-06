@@ -7,9 +7,8 @@
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 
-#include "SIMPLib/Common/FilterFactory.hpp"
-#include "SIMPLib/Common/FilterManager.h"
-#include "SIMPLib/Common/IFilterFactory.hpp"
+#include "SIMPLib/Filtering/FilterFactory.hpp"
+#include "SIMPLib/Filtering/FilterManager.h"
 
 #include "StatsGenerator/StatsGeneratorConstants.h"
 #include "StatsGenerator/StatsGeneratorVersion.h"

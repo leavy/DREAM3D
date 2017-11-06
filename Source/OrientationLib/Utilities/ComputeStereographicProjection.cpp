@@ -1,5 +1,5 @@
 /* ============================================================================
- * Copyright (c) 2017 BlueQuartz Softwae, LLC
+ * Copyright (c) 2017 BlueQuartz Software, LLC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -31,6 +31,9 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "ComputeStereographicProjection.h"
 
+#if 0
+#include "H5Support/H5Utilities.h"
+#endif
 
 #include "OrientationLib/Utilities/ModifiedLambertProjection.h"
 
@@ -57,6 +60,15 @@ void ComputeStereographicProjection::operator()() const
 {
   ModifiedLambertProjection::Pointer lambert = ModifiedLambertProjection::LambertBallToSquare(m_XYZCoords, m_Config->lambertDim, m_Config->sphereRadius);
   lambert->normalizeSquaresToMRD();
+  
+  #if 0
+  int dim = lambert->getDimension();
+  QString filename = QString("/tmp/Lambert-%1.h5").arg(dim).arg(m_Config->);
+  hid_t file_id = H5Utilities::createFile(filename.toStdString());
+  lambert->writeHDF5Data(file_id);
+  H5Fclose(file_id);
+  #endif 
+
   m_Intensity->resize(m_Config->imageDim * m_Config->imageDim);
   lambert->createStereographicProjection(m_Config->imageDim, m_Intensity);
 }

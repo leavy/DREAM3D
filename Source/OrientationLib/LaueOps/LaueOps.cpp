@@ -35,14 +35,14 @@
 
 #include "LaueOps.h"
 
+#include <chrono>
 #include <limits>
 #include <random>
-#include <chrono>
 
 #include <QtCore/QDateTime>
 
+#include "SIMPLib/Math/SIMPLibRandom.h"
 #include "SIMPLib/Utilities/ColorTable.h"
-#include "SIMPLib/Utilities/SIMPLibRandom.h"
 
 #include "OrientationLib/OrientationMath/OrientationTransforms.hpp"
 
@@ -63,18 +63,18 @@ namespace Detail
 
 // const static float m_OnePointThree = 1.33333333333f;
 
-const float sin_wmin_neg_1_over_2 = static_cast<float>(sinf(SIMPLib::Constants::k_ACosNeg1 / 2.0f));
-const float sin_wmin_pos_1_over_2 = static_cast<float>(sinf(SIMPLib::Constants::k_ACos1 / 2.0f));
-const float sin_of_acos_neg_1 = sinf(SIMPLib::Constants::k_ACosNeg1);
-const float sin_of_acos_pos_1 = sinf(SIMPLib::Constants::k_ACos1);
+// const static float sin_wmin_neg_1_over_2 = static_cast<float>(sinf(SIMPLib::Constants::k_ACosNeg1 / 2.0f));
+// const static float sin_wmin_pos_1_over_2 = static_cast<float>(sinf(SIMPLib::Constants::k_ACos1 / 2.0f));
+// const static float sin_of_acos_neg_1 = sinf(SIMPLib::Constants::k_ACosNeg1);
+// const static float sin_of_acos_pos_1 = sinf(SIMPLib::Constants::k_ACos1);
 
 //  const float recip_sin_of_acos_neg_1 = 1.0f / sin_of_acos_neg_1;
 //  const float recip_sin_of_acos_pos_1 = 1.0f / sin_of_acos_pos_1;
 
-const static float SinOfHalf = sinf(0.5f);
-const static float CosOfHalf = cosf(0.5f);
-const static float SinOfZero = sinf(0.0f);
-const static float CosOfZero = cosf(0.0f);
+// const static float SinOfHalf = sinf(0.5f);
+// const static float CosOfHalf = cosf(0.5f);
+// const static float SinOfZero = sinf(0.0f);
+// const static float CosOfZero = cosf(0.0f);
 }
 
 // -----------------------------------------------------------------------------

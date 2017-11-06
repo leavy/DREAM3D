@@ -45,10 +45,10 @@
 // Needed for AxisAngle_t and Crystal Symmetry constants
 #include "EbsdLib/EbsdConstants.h"
 
-#include "SIMPLib/SIMPLib.h"
-#include "SIMPLib/Common/AbstractFilter.h"
 #include "SIMPLib/DataArrays/StatsDataArray.h"
 #include "SIMPLib/DataArrays/StringDataArray.hpp"
+#include "SIMPLib/Filtering/AbstractFilter.h"
+#include "SIMPLib/SIMPLib.h"
 #include "SIMPLib/StatsData/MatrixStatsData.h"
 #include "SIMPLib/StatsData/StatsData.h"
 
@@ -116,11 +116,11 @@ int MatrixPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool pr
   StringDataArray::Pointer phaseNameArray = std::dynamic_pointer_cast<StringDataArray>(iDataArray);
   phaseNameArray->setValue(getPhaseIndex(), getPhaseName());
 
-  StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics).get());
+  StatsDataArray::Pointer statsDataArray = std::dynamic_pointer_cast<StatsDataArray>(attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics));
   if(nullptr != statsDataArray)
   {
     StatsData::Pointer statsData = statsDataArray->getStatsData(getPhaseIndex());
-    MatrixStatsData* matrixStatsData = MatrixStatsData::SafePointerDownCast(statsData.get());
+    MatrixStatsData::Pointer matrixStatsData = std::dynamic_pointer_cast<MatrixStatsData>(statsData);
     if(nullptr != matrixStatsData)
     {
       matrixStatsData->setPhaseFraction(calcPhaseFraction);
@@ -129,8 +129,7 @@ int MatrixPhaseWidget::gatherStatsData(AttributeMatrix::Pointer attrMat, bool pr
     else
     {
       retErr = -1000;
-      QString msg = QString("MatrixPhaseWidget tried to cast a StatsData pointer with name %1 to a MatrixStatsData but failed in the process.\nError code %2")
-      .arg(statsData->getName()).arg(retErr);
+      QString msg = QString("MatrixPhaseWidget tried to cast a StatsData pointer with name %1 to a MatrixStatsData but failed in the process.\nError code %2").arg(statsData->getName()).arg(retErr);
       QMessageBox::critical(this, QString("MatrixPhaseWidget: Gather StatsData Error"), msg, QMessageBox::Ok);
     }
   }
@@ -153,13 +152,13 @@ void MatrixPhaseWidget::extractStatsData(AttributeMatrix::Pointer attrMat, int i
   setCrystalStructure(attributeArray[index]);
 
   iDataArray = attrMat->getAttributeArray(SIMPL::EnsembleData::Statistics);
-  StatsDataArray* statsDataArray = StatsDataArray::SafeObjectDownCast<IDataArray*, StatsDataArray*>(iDataArray.get());
+  StatsDataArray::Pointer statsDataArray = std::dynamic_pointer_cast<StatsDataArray>(iDataArray);
   if(statsDataArray == nullptr)
   {
     return;
   }
   StatsData::Pointer statsData = statsDataArray->getStatsData(index);
-  MatrixStatsData* matrixStatsData = MatrixStatsData::SafePointerDownCast(statsData.get());
+  MatrixStatsData::Pointer matrixStatsData = std::dynamic_pointer_cast<MatrixStatsData>(statsData);
 
   setPhaseFraction(matrixStatsData->getPhaseFraction());
   QString phaseName = statsData->getName();

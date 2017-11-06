@@ -49,17 +49,16 @@
 #include "H5Support/HDF5ScopedFileSentinel.h"
 
 #include "SIMPLib/Common/Constants.h"
-#include "SIMPLib/Common/FilterManager.h"
-#include "SIMPLib/Common/IFilterFactory.hpp"
 #include "SIMPLib/Common/ShapeType.h"
 #include "SIMPLib/CoreFilters/DataContainerReader.h"
 #include "SIMPLib/DataArrays/StatsDataArray.h"
+#include "SIMPLib/Filtering/FilterManager.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
 #include "SIMPLib/Math/SIMPLibMath.h"
+#include "SIMPLib/Math/SIMPLibRandom.h"
 #include "SIMPLib/SIMPLib.h"
 #include "SIMPLib/StatsData/PrimaryStatsData.h"
 #include "SIMPLib/StatsData/StatsData.h"
-#include "SIMPLib/Utilities/SIMPLibRandom.h"
 
 #include "SVWidgetsLib/QtSupport/QtSFileCompleter.h"
 
@@ -268,7 +267,7 @@ void InitializeSyntheticVolumeWidget::on_m_InputFile_textChanged(const QString& 
     return;
   }
   // Get the Phases
-  DataArray<uint32_t>* phases = DataArray<uint32_t>::SafePointerDownCast(iPtr.get());
+  UInt32ArrayType::Pointer phases = std::dynamic_pointer_cast<UInt32ArrayType>(iPtr);
 
   int size = static_cast<int>(phases->getNumberOfTuples());
   QVector<QString> shapeTypeStrings;
@@ -465,7 +464,7 @@ int InitializeSyntheticVolumeWidget::estimate_numFeatures(int xpoints, int ypoin
   DataArray<uint32_t>* phaseType = DataArray<uint32_t>::SafePointerDownCast(iPtr.get());
 
   iPtr = m_DataContainer->getCellEnsembleData(SIMPL::EnsembleData::Statistics);
-  StatsDataArray* statsDataArrayPtr = StatsDataArray::SafePointerDownCast(iPtr.get());
+  StatsDataArray::Pointer statsDataArrayPtr = std::dynamic_pointer_cast<StatsDataArray>(iPtr);
   if(nullptr == statsDataArrayPtr)
   {
     return -1;
@@ -486,7 +485,7 @@ int InitializeSyntheticVolumeWidget::estimate_numFeatures(int xpoints, int ypoin
   {
     if(phaseType->GetValue(i) == SIMPL::PhaseType::Primary)
     {
-      PrimaryStatsData* pp = PrimaryStatsData::SafePointerDownCast(statsDataArray[i].get());
+      PrimaryStatsData::Pointer pp = std::dynamic_pointer_cast<PrimaryStatsData>(statsDataArray[i]);
       primaryphases.push_back(i);
       primaryphasefractions.push_back(pp->getPhaseFraction());
       totalprimaryfractions = totalprimaryfractions + pp->getPhaseFraction();
@@ -511,7 +510,7 @@ int InitializeSyntheticVolumeWidget::estimate_numFeatures(int xpoints, int ypoin
     {
       volgood = 0;
       phase = primaryphases[j];
-      PrimaryStatsData* pp = PrimaryStatsData::SafePointerDownCast(statsDataArray[phase].get());
+      PrimaryStatsData::Pointer pp = std::dynamic_pointer_cast<PrimaryStatsData>(statsDataArray[phase]);
       while (volgood == 0)
       {
         volgood = 1;
@@ -575,7 +574,7 @@ bool InitializeSyntheticVolumeWidget::verifyPathExists(QString outFilePath, QLin
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void InitializeSyntheticVolumeWidget::setInputFilePath(QString val) 
+void InitializeSyntheticVolumeWidget::setInputFilePath(QString val)
 {
   m_InputFile->setText(val);
 }
@@ -583,7 +582,7 @@ void InitializeSyntheticVolumeWidget::setInputFilePath(QString val)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QString InitializeSyntheticVolumeWidget::getInputFilePath() 
+QString InitializeSyntheticVolumeWidget::getInputFilePath()
 {
   return m_InputFile->text();
 }

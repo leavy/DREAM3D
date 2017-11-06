@@ -42,15 +42,15 @@
 #include "SIMPLib/FilterParameters/SeparatorFilterParameter.h"
 #include "SIMPLib/FilterParameters/StringFilterParameter.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
+#include "SIMPLib/Math/SIMPLibRandom.h"
 #include "SIMPLib/StatsData/PrecipitateStatsData.h"
 #include "SIMPLib/StatsData/PrimaryStatsData.h"
-#include "SIMPLib/Utilities/SIMPLibRandom.h"
 #include "SIMPLib/Utilities/TimeUtilities.h"
 
 #include "OrientationLib/LaueOps/CubicOps.h"
 #include "OrientationLib/LaueOps/HexagonalOps.h"
-#include "OrientationLib/LaueOps/OrthoRhombicOps.h"
 #include "OrientationLib/LaueOps/LaueOps.h"
+#include "OrientationLib/LaueOps/OrthoRhombicOps.h"
 #include "OrientationLib/Texture/Texture.hpp"
 
 #include "SyntheticBuilding/SyntheticBuildingConstants.h"
@@ -127,8 +127,7 @@ void MatchCrystallography::setupFilterParameters()
 
   parameters.push_back(SeparatorFilterParameter::New("Cell Data", FilterParameter::RequiredArray));
   {
-    DataArraySelectionFilterParameter::RequirementType req =
-        DataArraySelectionFilterParameter::CreateRequirement(SIMPL::TypeNames::Int32, 1, AttributeMatrix::Type::Cell, IGeometry::Type::Image);
+    DataArraySelectionFilterParameter::RequirementType req = DataArraySelectionFilterParameter::CreateRequirement(SIMPL::TypeNames::Int32, 1, AttributeMatrix::Type::Cell, IGeometry::Type::Image);
     parameters.push_back(SIMPL_NEW_DA_SELECTION_FP("Feature Ids", FeatureIdsArrayPath, FilterParameter::RequiredArray, MatchCrystallography, req));
   }
   parameters.push_back(SeparatorFilterParameter::New("Cell Feature Data", FilterParameter::RequiredArray));
@@ -461,7 +460,7 @@ void MatchCrystallography::initializeArrays(size_t ensem)
 
   if(m_PhaseTypes[ensem] == static_cast<PhaseType::EnumType>(PhaseType::Type::Precipitate))
   {
-    PrecipitateStatsData* pp = PrecipitateStatsData::SafePointerDownCast(statsDataArray[ensem].get());
+    PrecipitateStatsData::Pointer pp = std::dynamic_pointer_cast<PrecipitateStatsData>(statsDataArray[ensem]);
     if(nullptr == pp)
     {
       QString ss = QObject::tr("Tried to cast a statsDataArray[%1].get() to a PrecipitateStatsData* "
@@ -479,7 +478,7 @@ void MatchCrystallography::initializeArrays(size_t ensem)
   }
   else if(m_PhaseTypes[ensem] == static_cast<PhaseType::EnumType>(PhaseType::Type::Primary))
   {
-    PrimaryStatsData* pp = PrimaryStatsData::SafePointerDownCast(statsDataArray[ensem].get());
+    PrimaryStatsData::Pointer pp = std::dynamic_pointer_cast<PrimaryStatsData>(statsDataArray[ensem]);
     if(nullptr == pp)
     {
       QString ss = QObject::tr("Tried to cast a statsDataArray[%1].get() to a PrimaryStatsData* "

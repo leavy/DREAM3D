@@ -44,8 +44,9 @@
 #include "SIMPLib/FilterParameters/LinkedBooleanFilterParameter.h"
 #include "SIMPLib/FilterParameters/SeparatorFilterParameter.h"
 #include "SIMPLib/FilterParameters/StringFilterParameter.h"
+#include "SIMPLib/FilterParameters/PreflightUpdatedValueFilterParameter.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
-#include "SIMPLib/Utilities/SIMPLibRandom.h"
+#include "SIMPLib/Math/SIMPLibRandom.h"
 
 #include "Sampling/SamplingConstants.h"
 #include "Sampling/SamplingVersion.h"
@@ -95,6 +96,16 @@ void CropImageGeometry::setupFilterParameters()
   parameters.push_back(SIMPL_NEW_INTEGER_FP("X Max (Column) [Inclusive]", XMax, FilterParameter::Parameter, CropImageGeometry));
   parameters.push_back(SIMPL_NEW_INTEGER_FP("Y Max (Row) [Inclusive]", YMax, FilterParameter::Parameter, CropImageGeometry));
   parameters.push_back(SIMPL_NEW_INTEGER_FP("Z Max (Plane) [Inclusive]", ZMax, FilterParameter::Parameter, CropImageGeometry));
+  
+  PreflightUpdatedValueFilterParameter::Pointer param =
+      SIMPL_NEW_PREFLIGHTUPDATEDVALUE_FP("Old Box Size in Length Units", OldBoxDimensions, FilterParameter::Parameter, CropImageGeometry);
+  param->setReadOnly(true);
+  parameters.push_back(param);
+  
+  param = SIMPL_NEW_PREFLIGHTUPDATEDVALUE_FP("New Box Size in Length Units", NewBoxDimensions, FilterParameter::Parameter, CropImageGeometry);
+  param->setReadOnly(true);
+  parameters.push_back(param);
+  
   QStringList linkedProps;
   linkedProps << "NewDataContainerName";
   parameters.push_back(SIMPL_NEW_BOOL_FP("Update Origin", UpdateOrigin, FilterParameter::Parameter, CropImageGeometry));
@@ -113,14 +124,12 @@ void CropImageGeometry::setupFilterParameters()
               << "FeatureIdsArrayPath";
   parameters.push_back(SIMPL_NEW_LINKED_BOOL_FP("Renumber Features", RenumberFeatures, FilterParameter::Parameter, CropImageGeometry, linkedProps));
   {
-    DataArraySelectionFilterParameter::RequirementType req =
-        DataArraySelectionFilterParameter::CreateRequirement(SIMPL::TypeNames::Int32, 1, AttributeMatrix::Type::Cell, IGeometry::Type::Image);
+    DataArraySelectionFilterParameter::RequirementType req = DataArraySelectionFilterParameter::CreateRequirement(SIMPL::TypeNames::Int32, 1, AttributeMatrix::Type::Cell, IGeometry::Type::Image);
     parameters.push_back(SIMPL_NEW_DA_SELECTION_FP("Feature Ids", FeatureIdsArrayPath, FilterParameter::RequiredArray, CropImageGeometry, req));
   }
-  //parameters.push_back(SeparatorFilterParameter::New("Cell Feature Data", FilterParameter::RequiredArray));
+  // parameters.push_back(SeparatorFilterParameter::New("Cell Feature Data", FilterParameter::RequiredArray));
   {
-    AttributeMatrixSelectionFilterParameter::RequirementType req =
-        AttributeMatrixSelectionFilterParameter::CreateRequirement(AttributeMatrix::Type::CellFeature, IGeometry::Type::Image);
+    AttributeMatrixSelectionFilterParameter::RequirementType req = AttributeMatrixSelectionFilterParameter::CreateRequirement(AttributeMatrix::Type::CellFeature, IGeometry::Type::Image);
     parameters.push_back(SIMPL_NEW_AM_SELECTION_FP("Cell Feature Attribute Matrix", CellFeatureAttributeMatrixPath, FilterParameter::RequiredArray, CropImageGeometry, req));
   }
   setFilterParameters(parameters);
@@ -177,16 +186,21 @@ void CropImageGeometry::dataCheck()
     return;
   }
 
+  
+  m_OldDimensions = getCurrentVolumeDataContainerDimensions();
+  m_OldResolution = getCurrentVolumeDataContainerResolutions();
+  image->getOrigin(m_OldOrigin.x, m_OldOrigin.y, m_OldOrigin.z);
+  
   DataContainer::Pointer destCellDataContainer = srcCellDataContainer;
   AttributeMatrix::Pointer destCellAttrMat;
 
   if(m_SaveAsNewDataContainer == true)
   {
-    float ox = 0.0f, oy = 0.0f, oz = 0.0f, rx = 0.0f, ry = 0.0f, rz = 0.0f;
-    size_t dx = 0, dy = 0, dz = 0;
-    image->getOrigin(ox, oy, oz);
-    image->getResolution(rx, ry, rz);
-    image->getDimensions(dx, dy, dz);
+//    float ox = 0.0f, oy = 0.0f, oz = 0.0f, rx = 0.0f, ry = 0.0f, rz = 0.0f;
+//    size_t dx = 0, dy = 0, dz = 0;
+//    image->getOrigin(ox, oy, oz);
+//    image->getResolution(rx, ry, rz);
+//    image->getDimensions(dx, dy, dz);
 
     destCellDataContainer = getDataContainerArray()->createNonPrereqDataContainer<AbstractFilter>(this, getNewDataContainerName());
     if(nullptr == destCellDataContainer.get() || getErrorCondition() < 0)
@@ -283,10 +297,39 @@ void CropImageGeometry::dataCheck()
   {
     setZMax(getZMin() + 1);
   }
+
+  
   tDims[0] = (getXMax() - getXMin()) + 1;
   tDims[1] = (getYMax() - getYMin()) + 1;
   tDims[2] = (getZMax() - getZMin()) + 1;
+  
+  m_NewDimensions.x = tDims[0];
+  m_NewDimensions.y = tDims[1];
+  m_NewDimensions.z = tDims[2];
+  m_NewResolution = m_OldResolution;
 
+  if(m_UpdateOrigin == true)
+  {
+//    float resolution[3] = {0.0f, 0.0f, 0.0f};
+//    destCellDataContainer->getGeometryAs<ImageGeom>()->getResolution(resolution);
+
+//    float origin[3] = {0.0f, 0.0f, 0.0f};
+//    destCellDataContainer->getGeometryAs<ImageGeom>()->getOrigin(origin);
+
+//    origin[0] = m_XMin * resolution[0] + oldOrigin[0];
+//    origin[1] = m_YMin * resolution[1] + oldOrigin[1];
+//    origin[2] = m_ZMin * resolution[2] + oldOrigin[2];
+
+    m_NewOrigin.x = getXMin() * m_NewResolution.x + m_OldOrigin.x;
+    m_NewOrigin.y = getYMin() * m_NewResolution.y + m_OldOrigin.y;
+    m_NewOrigin.z = getZMin() * m_NewResolution.z + m_OldOrigin.z;
+
+//    destCellDataContainer->getGeometryAs<ImageGeom>()->setOrigin(origin);
+  }
+  else
+  {
+    m_NewOrigin = m_OldOrigin;
+  }
   destCellDataContainer->getGeometryAs<ImageGeom>()->setDimensions(tDims[0], tDims[1], tDims[2]);
 
   // If any of the sanity checks fail above then we should NOT attempt to go any further.
@@ -328,8 +371,7 @@ void CropImageGeometry::dataCheck()
     }
     else
     {
-      QString ss =
-          QObject::tr("The DataArray '%1' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?").arg(getFeatureIdsArrayPath().serialize("/"));
+      QString ss = QObject::tr("The DataArray '%1' which defines the Feature Ids to renumber is invalid. Does it exist? Is it the correct type?").arg(getFeatureIdsArrayPath().serialize("/"));
       setErrorCondition(-55500);
       notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
     }
@@ -337,8 +379,8 @@ void CropImageGeometry::dataCheck()
     AttributeMatrix::Pointer cellFeatureAttrMat = srcCellDataContainer->getPrereqAttributeMatrix<AbstractFilter>(nullptr, getCellFeatureAttributeMatrixPath().getAttributeMatrixName(), -56);
     if(nullptr == cellFeatureAttrMat.get())
     {
-      QString ss =
-          QObject::tr("The AttributeMatrix '%1' is invalid. Does it exist? Is it the correct type?. The AttributeMatrix defines where the segmented features are stored.").arg(getCellFeatureAttributeMatrixPath().serialize("/"));
+      QString ss = QObject::tr("The AttributeMatrix '%1' is invalid. Does it exist? Is it the correct type?. The AttributeMatrix defines where the segmented features are stored.")
+                       .arg(getCellFeatureAttributeMatrixPath().serialize("/"));
       setErrorCondition(-55501);
       notifyErrorMessage(getHumanLabel(), ss, getErrorCondition());
       return;
@@ -639,6 +681,36 @@ FloatVec3_t CropImageGeometry::getCurrentVolumeDataContainerResolutions()
     data.z = 0;
   }
   return data;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QString CropImageGeometry::getOldBoxDimensions()
+{
+  QString desc;
+  QTextStream ss(&desc);
+
+  ss << "X Range: " << m_OldOrigin.x << " to " << (m_OldOrigin.x + (m_OldDimensions.x * m_OldResolution.x)) << " (Delta: " << (m_OldDimensions.x * m_OldResolution.x) << ")\n";
+  ss << "Y Range: " << m_OldOrigin.y << " to " << (m_OldOrigin.y + (m_OldDimensions.y * m_OldResolution.y)) << " (Delta: " << (m_OldDimensions.y * m_OldResolution.y) << ")\n";
+  ss << "Z Range: " << m_OldOrigin.z << " to " << (m_OldOrigin.z + (m_OldDimensions.z * m_OldResolution.z)) << " (Delta: " << (m_OldDimensions.z * m_OldResolution.z) << ")";
+
+  return desc;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QString CropImageGeometry::getNewBoxDimensions()
+{
+  QString desc;
+  QTextStream ss(&desc);
+
+  ss << "X Range: " << m_NewOrigin.x << " to " << (m_NewOrigin.x + (m_NewDimensions.x * m_NewResolution.x)) << " (Delta: " << (m_NewDimensions.x * m_NewResolution.x) << ")\n";
+  ss << "Y Range: " << m_NewOrigin.y << " to " << (m_NewOrigin.y + (m_NewDimensions.y * m_NewResolution.y)) << " (Delta: " << (m_NewDimensions.y * m_NewResolution.y) << ")\n";
+  ss << "Z Range: " << m_NewOrigin.z << " to " << (m_NewOrigin.z + (m_NewDimensions.z * m_NewResolution.z)) << " (Delta: " << (m_NewDimensions.z * m_NewResolution.z) << ")";
+
+  return desc;
 }
 
 // -----------------------------------------------------------------------------

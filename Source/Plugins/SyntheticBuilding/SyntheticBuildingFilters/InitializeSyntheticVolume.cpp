@@ -51,12 +51,12 @@
 #include "SIMPLib/FilterParameters/StringFilterParameter.h"
 #include "SIMPLib/Geometry/ImageGeom.h"
 #include "SIMPLib/Math/SIMPLibMath.h"
+#include "SIMPLib/Math/SIMPLibRandom.h"
 #include "SIMPLib/StatsData/BoundaryStatsData.h"
 #include "SIMPLib/StatsData/MatrixStatsData.h"
 #include "SIMPLib/StatsData/PrecipitateStatsData.h"
 #include "SIMPLib/StatsData/PrimaryStatsData.h"
 #include "SIMPLib/StatsData/TransformationStatsData.h"
-#include "SIMPLib/Utilities/SIMPLibRandom.h"
 
 #include "SyntheticBuilding/SyntheticBuildingConstants.h"
 #include "SyntheticBuilding/SyntheticBuildingVersion.h"
@@ -165,6 +165,10 @@ void InitializeSyntheticVolume::setupFilterParameters()
   parameters.push_back(SIMPL_NEW_INT_VEC3_FP("Dimensions", Dimensions, FilterParameter::Parameter, InitializeSyntheticVolume));
   parameters.push_back(SIMPL_NEW_FLOAT_VEC3_FP("Resolution", Resolution, FilterParameter::Parameter, InitializeSyntheticVolume));
   parameters.push_back(SIMPL_NEW_FLOAT_VEC3_FP("Origin", Origin, FilterParameter::Parameter, InitializeSyntheticVolume));
+
+  param = SIMPL_NEW_PREFLIGHTUPDATEDVALUE_FP("Box Size in Length Units", BoxDimensions, FilterParameter::Parameter, InitializeSyntheticVolume);
+  param->setReadOnly(true);
+  parameters.push_back(param);
 
   setFilterParameters(parameters);
 }
@@ -409,7 +413,7 @@ QString InitializeSyntheticVolume::estimateNumFeatures(IntVec3_t dims, FloatVec3
   {
     if(phaseType->getValue(i) == static_cast<PhaseType::EnumType>(PhaseType::Type::Primary))
     {
-      PrimaryStatsData* pp = PrimaryStatsData::SafePointerDownCast(statsDataArray[i].get());
+      PrimaryStatsData::Pointer pp = std::dynamic_pointer_cast<PrimaryStatsData>(statsDataArray[i]);
       primaryphases.push_back(i);
       primaryphasefractions.push_back(pp->getPhaseFraction());
       totalprimaryfractions = totalprimaryfractions + pp->getPhaseFraction();
@@ -437,7 +441,7 @@ QString InitializeSyntheticVolume::estimateNumFeatures(IntVec3_t dims, FloatVec3
     {
       volgood = false;
       phase = primaryphases[j];
-      PrimaryStatsData* pp = PrimaryStatsData::SafePointerDownCast(statsDataArray[phase].get());
+      PrimaryStatsData::Pointer pp = std::dynamic_pointer_cast<PrimaryStatsData>(statsDataArray[phase]);
       if(nullptr == pp)
       {
         QString ss = QObject::tr("Tried to cast a statsDataArray[%1].get() to a PrimaryStatsData* "
@@ -491,6 +495,21 @@ QString InitializeSyntheticVolume::estimateNumFeatures(IntVec3_t dims, FloatVec3
 QString InitializeSyntheticVolume::getEstimatedPrimaryFeatures()
 {
   return m_EstimatedPrimaryFeatures;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QString InitializeSyntheticVolume::getBoxDimensions()
+{
+  QString desc;
+  QTextStream ss(&desc);
+
+  ss << "X Range: " << m_Origin.x << " to " << (m_Origin.x + (m_Dimensions.x * m_Resolution.x)) << " (Delta: " << (m_Dimensions.x * m_Resolution.x) << ")\n";
+  ss << "Y Range: " << m_Origin.y << " to " << (m_Origin.y + (m_Dimensions.y * m_Resolution.y)) << " (Delta: " << (m_Dimensions.y * m_Resolution.y) << ")\n";
+  ss << "Z Range: " << m_Origin.z << " to " << (m_Origin.z + (m_Dimensions.z * m_Resolution.z)) << " (Delta: " << (m_Dimensions.z * m_Resolution.z) << ")";
+
+  return desc;
 }
 
 // -----------------------------------------------------------------------------
